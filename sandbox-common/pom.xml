@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.sandbox.services</groupId>
+        <artifactId>sandbox-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>sandbox-common</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <name>sandbox-common</name>
+    <description>公共模块聚合 - 包含基础工具、MVC公共组件</description>
+
+    <modules>
+        <module>sandbox-common-base</module>
+        <module>sandbox-common-mvc</module>
+    </modules>
+</project>

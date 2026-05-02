@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sandbox.services</groupId>
+        <artifactId>sandbox-common</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>sandbox-common-mvc</artifactId>
+    <version>${revision}</version>
+    <name>sandbox-common-mvc</name>
+    <description>Web MVC公共模块</description>
+
+    <dependencies>
+
+        <!-- 内部模块依赖 Begin -->
+        <dependency>
+            <groupId>com.sandbox.services</groupId>
+            <artifactId>sandbox-common-base</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <!-- 内部模块依赖 End -->
+
+        <!-- Spring Boot Starter Begin -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- Spring Boot Starter End -->
+
+        <!-- AOP 切面 Begin -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+        </dependency>
+        <!-- AOP 切面 End -->
+
+        <!-- TLog Begin -->
+        <dependency>
+            <groupId>com.yomahub</groupId>
+            <artifactId>tlog-all-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- TLog End -->
+    </dependencies>
+</project>

@@ -11,6 +11,7 @@
     <name>SANDBOX</name>
 
     <modules>
+        <module>sandbox-common</module>
         <module>sandbox-home</module>
     </modules>
 
@@ -23,7 +24,7 @@
     <properties>
         <!-- 版本配置 Begin -->
         <revision>1.0.0</revision>
-        <!-- 版本配置 Begin -->
+        <!-- 版本配置 End -->
 
         <!-- 基础环境配置 Begin -->
         <java.version>17</java.version>
@@ -41,14 +42,25 @@
         <spring-cloud-alibaba.version>2023.0.3.4</spring-cloud-alibaba.version>
         <!-- 核心框架版本 End -->
 
+        <!-- Spring AI 版本 Begin -->
+        <spring-ai-bom.version>1.1.5</spring-ai-bom.version>
+        <!-- Spring AI 版本 End -->
+
+        <!-- Spring Security 版本 Begin -->
+        <spring-security-oauth2-authorization-server.version>1.4.3</spring-security-oauth2-authorization-server.version>
+        <spring-security-cas.version>6.2.4</spring-security-cas.version>
+        <!-- Spring Security 版本 End -->
+
         <!-- 数据校验版本 Begin -->
         <jakarta_validation.version>3.0.2</jakarta_validation.version>
         <!-- 数据校验版本 End -->
 
         <!-- 数据库相关版本 Begin -->
-        <mysql.version>8.0.28</mysql.version>
+        <mysql.version>8.0.33</mysql.version>
         <druid.version>1.2.21</druid.version>
+        <druid-spring-boot-3-starter.version>1.2.27</druid-spring-boot-3-starter.version>
         <sharding-jdbc-core.version>5.0.0</sharding-jdbc-core.version>
+        <antlr4-runtime.version>4.9.2</antlr4-runtime.version>
         <!-- 数据库相关版本 End -->
 
         <!-- ORM框架版本 Begin -->
@@ -60,28 +72,42 @@
         <jasypt.version>3.0.3</jasypt.version>
         <!-- 安全加密版本 End -->
 
+        <!-- 日志相关版本 Begin -->
+        <tlog-all-spring-boot-starter.version>1.5.2</tlog-all-spring-boot-starter.version>
+        <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
+        <!-- 日志相关版本 End -->
+
+        <!-- Netty 版本 Begin -->
+        <netty-all.version>4.1.125.Final</netty-all.version>
+        <!-- Netty 版本 End -->
+
         <!-- 通用工具类版本 Begin -->
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <lombok.version>1.18.20</lombok.version>
         <fastjson.version>2.0.53</fastjson.version>
-        <hutool-core.version>5.8.26</hutool-core.version>
+        <hutool.version>5.8.42</hutool.version>
         <aspectjweaver.version>1.9.7</aspectjweaver.version>
+        <commons-collections4.version>4.5.0-M3</commons-collections4.version>
         <!-- 通用工具类版本 End -->
     </properties>
 
+    <!-- ============================================ -->
+    <!-- 版本管理：统一控制所有依赖的版本号          -->
+    <!-- 子模块引入这些依赖时无需指定版本            -->
+    <!-- ============================================ -->
     <dependencyManagement>
         <dependencies>
             <!-- Spring AI Begin -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
-                <version>1.1.5</version>
+                <version>${spring-ai-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <!-- Spring AI End -->
 
-            <!-- Spring Cloud Begin-->
+            <!-- Spring Cloud Begin -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -96,33 +122,56 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Spring Cloud End-->
+            <!-- Spring Cloud End -->
 
-            <!--Aop Begin-->
+            <!-- ========== 通用工具类（按需引入） Begin ========== -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            <!-- ========== 通用工具类（按需引入） End ========== -->
+
+            <!-- Aop Begin -->
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
                 <version>${aspectjweaver.version}</version>
             </dependency>
-            <!--Aop End-->
+            <!-- Aop End -->
 
-            <!--TLog Begin-->
+            <!-- TLog Begin -->
             <dependency>
                 <groupId>com.yomahub</groupId>
                 <artifactId>tlog-all-spring-boot-starter</artifactId>
-                <version>1.5.2</version>
+                <version>${tlog-all-spring-boot-starter.version}</version>
             </dependency>
-            <!--TLog End-->
+            <!-- TLog End -->
 
-            <!--logstash Begin-->
+            <!-- Logstash Begin -->
             <dependency>
                 <groupId>net.logstash.logback</groupId>
                 <artifactId>logstash-logback-encoder</artifactId>
-                <version>7.4</version>
+                <version>${logstash-logback-encoder.version}</version>
             </dependency>
-            <!--logstash End-->
+            <!-- Logstash End -->
 
-            <!--Data Source Begin-->
+            <!-- Data Source Begin -->
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
@@ -146,7 +195,7 @@
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid-spring-boot-3-starter</artifactId>
-                <version>1.2.27</version>
+                <version>${druid-spring-boot-3-starter.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.shardingsphere</groupId>
@@ -156,97 +205,84 @@
             <dependency>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-runtime</artifactId>
-                <version>4.9.2</version>
+                <version>${antlr4-runtime.version}</version>
             </dependency>
-            <!--Data Source End-->
+            <!-- Data Source End -->
 
-            <!--Jasypt 加密 Begin-->
+            <!-- Jasypt 加密 Begin -->
             <dependency>
                 <groupId>com.github.ulisesbocchio</groupId>
                 <artifactId>jasypt-spring-boot-starter</artifactId>
                 <version>${jasypt.version}</version>
             </dependency>
-            <!--Jasypt 解密 End-->
+            <!-- Jasypt 加密 End -->
 
-            <!-- Spring Authorization Server Begin-->
+            <!-- Spring Authorization Server Begin -->
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-oauth2-authorization-server</artifactId>
-                <version>1.4.3</version>
+                <version>${spring-security-oauth2-authorization-server.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-cas</artifactId>
-                <version>6.2.4</version>
+                <version>${spring-security-cas.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-            <!-- Spring Authorization Server End-->
+            <!-- Spring Authorization Server End -->
 
-            <!-- Redis Begin-->
+            <!-- Redis Begin -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-redis</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-            <!-- Redis End-->
+            <!-- Redis End -->
 
-            <!-- validation 参数校验 Begin -->
+            <!-- Validation 参数校验 Begin -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-validation</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
                 <version>${jakarta_validation.version}</version>
             </dependency>
-            <!-- validation 参数校验 End -->
+            <!-- Validation 参数校验 End -->
 
-            <!-- Netty Begin-->
+            <!-- Netty Begin -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-                <version>4.1.116.Final</version>
+                <version>${netty-all.version}</version>
             </dependency>
-            <!-- Netty End-->
+            <!-- Netty End -->
         </dependencies>
     </dependencyManagement>
 
+    <!-- ============================================ -->
+    <!-- 全局依赖：仅保留所有模块100%都需要的       -->
+    <!-- ============================================ -->
     <dependencies>
-        <!--Common Tool Begin-->
+        <!-- Lombok：所有模块都需要，且scope=provided不影响传递 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- SLF4J 日志门面：所有模块都需要打日志 -->
         <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-            <version>${fastjson.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>${hutool-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.5.0-M3</version>
-        </dependency>
-        <!--Common Tool End-->
     </dependencies>
 
     <build>
