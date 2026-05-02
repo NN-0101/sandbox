@@ -1,7 +1,8 @@
 package com.sandbox.demo.mysql.util;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import javax.sql.DataSource;
+
+import com.alibaba.druid.pool.DruidDataSource;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;

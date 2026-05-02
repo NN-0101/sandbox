@@ -13,7 +13,7 @@
     <modules>
         <module>sandbox-common</module>
         <module>sandbox-demo</module>
-        <module>sandbox-home</module>
+<!--        <module>sandbox-home</module>-->
     </modules>
 
     <parent>
@@ -59,9 +59,9 @@
         <!-- 数据库相关版本 Begin -->
         <mysql.version>8.0.33</mysql.version>
         <druid.version>1.2.21</druid.version>
-        <druid-spring-boot-3-starter.version>1.2.27</druid-spring-boot-3-starter.version>
-        <sharding-jdbc-core.version>5.0.0</sharding-jdbc-core.version>
-        <antlr4-runtime.version>4.9.2</antlr4-runtime.version>
+        <druid-spring-boot-3-starter.version>1.2.28</druid-spring-boot-3-starter.version>
+        <sharding-jdbc.version>5.5.1</sharding-jdbc.version>
+        <antlr4-runtime.version>4.10.1</antlr4-runtime.version>
         <!-- 数据库相关版本 End -->
 
         <!-- ORM框架版本 Begin -->
@@ -190,18 +190,13 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>shardingsphere-jdbc-core</artifactId>
-                <version>${sharding-jdbc-core.version}</version>
+                <artifactId>shardingsphere-jdbc</artifactId>
+                <version>${sharding-jdbc.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid-spring-boot-3-starter</artifactId>
                 <version>${druid-spring-boot-3-starter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>shardingsphere-sql-parser-mysql</artifactId>
-                <version>${sharding-jdbc-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.antlr</groupId>

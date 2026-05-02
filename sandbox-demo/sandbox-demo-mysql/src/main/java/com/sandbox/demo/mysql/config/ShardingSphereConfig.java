@@ -1,14 +1,15 @@
 package com.sandbox.demo.mysql.config;
 
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
-import org.apache.shardingsphere.infra.config.RuleConfiguration;
-import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration;
-import org.apache.shardingsphere.readwritesplitting.api.ReadwriteSplittingRuleConfiguration;
-import org.apache.shardingsphere.readwritesplitting.api.rule.ReadwriteSplittingDataSourceRuleConfiguration;
+import org.apache.shardingsphere.encrypt.config.EncryptRuleConfiguration;
+import org.apache.shardingsphere.infra.algorithm.core.config.AlgorithmConfiguration;
+import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
+import org.apache.shardingsphere.readwritesplitting.config.ReadwriteSplittingRuleConfiguration;
+import org.apache.shardingsphere.readwritesplitting.config.rule.ReadwriteSplittingDataSourceGroupRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
-import org.apache.shardingsphere.sharding.api.config.strategy.keygen.KeyGenerateStrategyConfiguration;
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.StandardShardingStrategyConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,19 +19,12 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.*;
 
-/**
- * ShardingSphere 5.3.2 核心配置
- * <p>
- * 读写分离 + 分库分表：
- *   分库：phone hash 取模
- *   分表：id 取模
- *
- * @author 0101
- * @since 2026-05-02
- */
 @Slf4j
 @Configuration
 public class ShardingSphereConfig {
+
+    @Resource
+    private EncryptRuleConfiguration encryptRuleConfiguration;
 
     @Bean
     @Primary
@@ -38,81 +32,70 @@ public class ShardingSphereConfig {
                                                DataSource ds1DataSource,
                                                DataSource ds0slave0DataSource,
                                                DataSource ds1slave0DataSource) throws SQLException {
-        // 1. 注册物理数据源
         Map<String, DataSource> dataSourceMap = new LinkedHashMap<>();
         dataSourceMap.put("ds0", ds0DataSource);
         dataSourceMap.put("ds1", ds1DataSource);
         dataSourceMap.put("ds0slave0", ds0slave0DataSource);
         dataSourceMap.put("ds1slave0", ds1slave0DataSource);
 
-        // 2. 规则集合
         Collection<RuleConfiguration> ruleConfigs = new ArrayList<>();
         ruleConfigs.add(createReadwriteSplittingRule());
         ruleConfigs.add(createShardingRule());
+        ruleConfigs.add(encryptRuleConfiguration);
 
-        // 3. 配置属性
         Properties props = new Properties();
         props.setProperty("sql-show", Boolean.TRUE.toString());
 
-        // 4. 创建数据源
         DataSource dataSource = ShardingSphereDataSourceFactory.createDataSource(
                 dataSourceMap, ruleConfigs, props);
         log.info("ShardingSphere 数据源创建成功（读写分离 + 分库分表）");
         return dataSource;
     }
 
-    /**
-     * 读写分离规则
-     */
     private ReadwriteSplittingRuleConfiguration createReadwriteSplittingRule() {
-        ReadwriteSplittingDataSourceRuleConfiguration ds0Config =
-                new ReadwriteSplittingDataSourceRuleConfiguration(
-                        "datasource0", "", "ds0",
-                        Collections.singletonList("ds0slave0"), "ROUND_ROBIN");
+        // datasource0：写 ds0，读 ds0slave0
+        ReadwriteSplittingDataSourceGroupRuleConfiguration ds0Group =
+                new ReadwriteSplittingDataSourceGroupRuleConfiguration(
+                        "datasource0",              // name
+                        "ds0",                      // writeDataSourceName
+                        Collections.singletonList("ds0slave0"), // readDataSourceNames
+                        ""                          // loadBalancerName（空串 = 默认轮询）
+                );
 
-        ReadwriteSplittingDataSourceRuleConfiguration ds1Config =
-                new ReadwriteSplittingDataSourceRuleConfiguration(
-                        "datasource1", "", "ds1",
-                        Collections.singletonList("ds1slave0"), "ROUND_ROBIN");
+        // datasource1：写 ds1，读 ds1slave0
+        ReadwriteSplittingDataSourceGroupRuleConfiguration ds1Group =
+                new ReadwriteSplittingDataSourceGroupRuleConfiguration(
+                        "datasource1",
+                        "ds1",
+                        Collections.singletonList("ds1slave0"),
+                        ""
+                );
 
         return new ReadwriteSplittingRuleConfiguration(
-                Arrays.asList(ds0Config, ds1Config), new HashMap<>());
+                Arrays.asList(ds0Group, ds1Group),
+                new HashMap<>()
+        );
     }
 
-    /**
-     * 分库分表规则
-     */
     private ShardingRuleConfiguration createShardingRule() {
         ShardingRuleConfiguration config = new ShardingRuleConfiguration();
 
-        // ========== t_user 表分片规则 ==========
         ShardingTableRuleConfiguration tableRuleConfig =
                 new ShardingTableRuleConfiguration("t_user",
-                        "datasource${0..1}.t_user_${0..1}");  // 4 张物理表
+                        "datasource${0..1}.t_user_${0..1}");
 
-        // 分库策略：phone 取模 → datasource0 / datasource1
         tableRuleConfig.setDatabaseShardingStrategy(
-                new StandardShardingStrategyConfiguration("phone", "phone_db_mod"));
-
-        // 分表策略：id 取模 → t_user_0 / t_user_1
+                new StandardShardingStrategyConfiguration("phone", "PHONE_DB_MOD"));
         tableRuleConfig.setTableShardingStrategy(
-                new StandardShardingStrategyConfiguration("id", "id_table_mod"));
+                new StandardShardingStrategyConfiguration("id", "ID_TABLE_MOD"));
 
         config.getTables().add(tableRuleConfig);
 
-        // ========== 注册分片算法 ==========
-
-        // 分库算法：phone hash 取模 2
-        Properties dbProps = new Properties();
-        dbProps.setProperty("sharding-count", "2");
-        config.getShardingAlgorithms().put("phone_db_mod",
-                new ShardingSphereAlgorithmConfiguration("HASH_MOD", dbProps));
-
-        // 分表算法：id 取模 2
-        Properties tableProps = new Properties();
-        tableProps.setProperty("sharding-count", "2");
-        config.getShardingAlgorithms().put("id_table_mod",
-                new ShardingSphereAlgorithmConfiguration("HASH_MOD", tableProps));
+        // 算法只需要注册空的 AlgorithmConfiguration，因为我们在 SPI 中已经实现了
+        config.getShardingAlgorithms().put("PHONE_DB_MOD",
+                new AlgorithmConfiguration("PHONE_DB_MOD", new Properties()));
+        config.getShardingAlgorithms().put("ID_TABLE_MOD",
+                new AlgorithmConfiguration("ID_TABLE_MOD", new Properties()));
 
         return config;
     }

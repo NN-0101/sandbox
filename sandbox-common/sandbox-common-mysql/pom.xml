@@ -13,11 +13,6 @@
     <name>sandbox-common-mysql</name>
     <description>mysql 数据库配置</description>
 
-    <properties>
-        <!-- 子模块独立控制 ShardingSphere 版本 -->
-        <shardingsphere.version>5.3.2</shardingsphere.version>
-    </properties>
-
     <dependencies>
         <!--Data Source Begin-->
         <dependency>
@@ -30,13 +25,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>shardingsphere-jdbc-core</artifactId>
-            <version>${shardingsphere.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>shardingsphere-sql-parser-mysql</artifactId>
-            <version>${shardingsphere.version}</version>
+            <artifactId>shardingsphere-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
