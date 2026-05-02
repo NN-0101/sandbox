@@ -3,18 +3,9 @@ package com.sandbox.common.mvc.tlog;
 import ch.qos.logback.core.PropertyDefinerBase;
 
 /**
- * Logback 动态日志路径，按 OS 自动适配。
+ * Logback 动态日志路径
  *
- * <ul>
- *   <li>Mac → {user.home}/logs</li>
- *   <li>Windows → logs</li>
- *   <li>Linux → /{user.name}/logs</li>
- * </ul>
- *
- * <p>在 logback-spring.xml 中：
- * <pre>
- * &lt;define name="logPath" class="com.sandbox.common.mvc.tlog.LogPathProperty"/&gt;
- * </pre>
+ * <p>按操作系统自动适配日志输出目录：Mac→~/logs，Windows→logs，Linux→/用户名/logs
  *
  * @author 0101
  * @since 2026-03-12

@@ -2,18 +2,16 @@ package com.sandbox.common.mvc.tlog;
 
 import com.yomahub.tlog.constant.TLogConstants;
 import com.yomahub.tlog.context.TLogContext;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 /**
- * TLog 过滤器，提取/生成 TraceId，写入响应头，请求结束后清理上下文。
+ * TLog 过滤器
+ *
+ * <p>拦截所有请求，提取/生成 TraceId，写入响应头，请求结束后清理上下文
  *
  * @author 0101
  * @since 2026-03-12
@@ -28,12 +26,12 @@ public class TLogFilter implements Filter {
                 && servletResponse instanceof HttpServletResponse response) {
 
             try {
-                TLogWebCommon.loadInstance().preHandle(request);
-                response.addHeader(TLogConstants.TLOG_TRACE_KEY, TLogContext.getTraceId());
+                TLogWebCommon.loadInstance().preHandle(request);  // 提取或生成 TraceId
+                response.addHeader(TLogConstants.TLOG_TRACE_KEY, TLogContext.getTraceId());  // 响应头返回 TraceId
                 filterChain.doFilter(servletRequest, servletResponse);
                 return;
             } finally {
-                TLogWebCommon.loadInstance().afterCompletion();
+                TLogWebCommon.loadInstance().afterCompletion();  // 清理上下文
             }
         }
 

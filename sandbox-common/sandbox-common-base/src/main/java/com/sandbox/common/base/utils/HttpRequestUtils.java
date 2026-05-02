@@ -8,13 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
- * HTTP 请求工具，基于 Hutool，支持 GET/POST/表单，超时默认 3s，失败返回 null。
+ * HTTP 请求工具
  *
- * <pre>
- * JSONObject result = HttpRequestUtils.get("<a href="https://api.example.com/users">...</a>");
- * JSONObject result = HttpRequestUtils.post(url, headers, jsonBody);
- * JSONObject result = HttpRequestUtils.postForm(url, formData);
- * </pre>
+ * <p>基于 Hutool，支持 GET/POST/表单请求，默认超时 3 秒，失败返回 null
  *
  * @author 0101
  * @since 2026-03-12
@@ -29,6 +25,9 @@ public class HttpRequestUtils {
 
     // ==================== POST ====================
 
+    /**
+     * 发送 POST 请求（无参）
+     */
     public static JSONObject post(String url) {
         try {
             String body = HttpRequest.post(url).timeout(DEFAULT_TIMEOUT).execute().body();
@@ -40,6 +39,12 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送 POST 请求（JSON 参数）
+     *
+     * @param url    请求地址
+     * @param params JSON 格式参数
+     */
     public static JSONObject post(String url, Map<String, Object> params) {
         try {
             String body = HttpRequest.post(url)
@@ -53,10 +58,16 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送 POST 请求（自定义请求头 + JSON 参数，默认超时）
+     */
     public static JSONObject post(String url, Map<String, String> headers, String jsonParam) {
         return post(url, headers, jsonParam, DEFAULT_TIMEOUT);
     }
 
+    /**
+     * 发送 POST 请求（自定义请求头 + JSON 参数 + 超时时间）
+     */
     public static JSONObject post(String url, Map<String, String> headers, String jsonParam, int timeout) {
         try {
             String body = HttpRequest.post(url)
@@ -70,6 +81,9 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送表单 POST 请求
+     */
     public static JSONObject postForm(String url, Map<String, String> headers, Map<String, Object> params) {
         try {
             String body = HttpRequest.post(url)
@@ -83,6 +97,9 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送表单 POST 请求（无请求头）
+     */
     public static JSONObject postForm(String url, Map<String, Object> params) {
         try {
             String body = HttpRequest.post(url).form(params).timeout(DEFAULT_TIMEOUT).execute().body();
@@ -96,7 +113,8 @@ public class HttpRequestUtils {
     }
 
     /**
-     * 发送 POST，失败返回 null，适用于消息推送等不严格要求成功的场景
+     * 发送 POST 消息（失败不抛异常）
+     * 适用于消息推送等不严格要求成功的场景
      */
     public static JSONObject sendMessagePost(String url, String jsonParam) {
         try {
@@ -111,6 +129,9 @@ public class HttpRequestUtils {
 
     // ==================== GET ====================
 
+    /**
+     * 发送 GET 请求
+     */
     public static JSONObject get(String url) {
         try {
             String body = HttpRequest.get(url).timeout(DEFAULT_TIMEOUT).execute().body();
@@ -122,6 +143,9 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送 GET 请求（参数作为表单）
+     */
     public static JSONObject get(String url, Map<String, Object> params) {
         try {
             String body = HttpRequest.get(url).form(params).timeout(DEFAULT_TIMEOUT).execute().body();
@@ -134,10 +158,16 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送 GET 请求（自定义请求头 + 参数，默认超时）
+     */
     public static JSONObject get(String url, Map<String, String> headers, Map<String, Object> params) {
         return get(url, headers, params, DEFAULT_TIMEOUT);
     }
 
+    /**
+     * 发送 GET 请求（自定义请求头 + 参数 + 超时时间）
+     */
     public static JSONObject get(String url, Map<String, String> headers, Map<String, Object> params, int timeout) {
         try {
             String body = HttpRequest.get(url)
@@ -151,6 +181,9 @@ public class HttpRequestUtils {
         }
     }
 
+    /**
+     * 发送 GET 请求（参数拼接到 URL 上）
+     */
     public static JSONObject getParamUrl(String url, Map<String, String> headers, Map<String, Object> params) {
         try {
             String result = HttpRequest.get(url + paramUrl(params))
@@ -165,7 +198,8 @@ public class HttpRequestUtils {
     }
 
     /**
-     * 参数 Map → ?a=1&b=2
+     * 将参数 Map 转换为 URL 查询串
+     * <p>例如：{a:1, b:2} → ?a=1&b=2
      */
     public static String paramUrl(Map<String, Object> param) {
         if (param == null || param.isEmpty()) return "";

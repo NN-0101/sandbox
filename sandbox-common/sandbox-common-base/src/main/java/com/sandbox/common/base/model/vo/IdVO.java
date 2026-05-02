@@ -6,13 +6,9 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 新增操作返回的 ID 响应。
+ * 新增操作返回的 ID
  *
- * <p>使用 String 类型，兼容雪花算法 19 位长整型，避免前端 JavaScript 精度丢失。
- *
- * <pre>
- * return R.success(IdVO.setResultId("1234567890123456789"));
- * </pre>
+ * <p>使用 String 类型兼容雪花算法 19 位长整型，避免前端精度丢失
  *
  * @author 0101
  * @since 2026-03-18
@@ -23,9 +19,16 @@ public class IdVO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 主键 ID，String 类型防止前端精度丢失 */
+    /**
+     * 主键 ID，String 类型防止前端精度丢失
+     */
     private String id;
 
+    /**
+     * 构建 ID 对象
+     *
+     * @param id 主键 ID（字符串形式）
+     */
     public static IdVO setResultId(String id) {
         IdVO vo = new IdVO();
         vo.setId(id);

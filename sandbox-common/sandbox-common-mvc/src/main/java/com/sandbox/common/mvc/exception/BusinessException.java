@@ -3,12 +3,9 @@ package com.sandbox.common.mvc.exception;
 import com.sandbox.common.mvc.enumeration.ResponseCodeEnum;
 
 /**
- * 业务异常，用于 Service 层抛出可预料的错误。
+ * 业务异常
  *
- * <pre>
- * throw new BusinessException(ResponseCodeEnum.PARAMETER_ERROR);
- * throw new BusinessException(ResponseCodeEnum.SQL_ERROR, e);
- * </pre>
+ * <p>Service 层抛出可预料的业务错误时使用
  *
  * @author 0101
  * @since 2026-03-12

@@ -11,13 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * AES 加解密工具。
+ * AES 加解密工具
  *
- * <ul>
- *   <li>MySQL 兼容（128位 ECB / Hex）：aesEncrypt / aesDecrypt</li>
- *   <li>标准 CBC（256位 / Base64）：encrypt / decrypt</li>
- *   <li>随机密钥生成：initAESKey()</li>
- * </ul>
+ * <p>提供三种模式：MySQL 兼容（128位 ECB/Hex）、标准 CBC（256位/Base64）、随机密钥生成
  *
  * @author 0101
  * @since 2026-03-12
@@ -34,7 +30,11 @@ public class AesUtil {
     // ==================== MySQL 兼容（128位 ECB / Hex）====================
 
     /**
-     * 加密，与 MySQL AES_ENCRYPT 兼容
+     * AES 加密，兼容 MySQL AES_ENCRYPT 函数
+     *
+     * @param value  明文
+     * @param aesKey 密钥
+     * @return Hex 编码密文，失败返回 null
      */
     public static String aesEncrypt(String value, String aesKey) {
         if (value == null) return null;
@@ -49,7 +49,11 @@ public class AesUtil {
     }
 
     /**
-     * 解密，与 MySQL AES_DECRYPT 兼容
+     * AES 解密，兼容 MySQL AES_DECRYPT 函数
+     *
+     * @param ciphertext Hex 编码密文
+     * @param aesKey     密钥
+     * @return 明文，失败返回 null
      */
     public static String aesDecrypt(String ciphertext, String aesKey) {
         if (ciphertext == null) return null;
@@ -62,6 +66,7 @@ public class AesUtil {
         }
     }
 
+    // 构建 MySQL 风格的 128 位密钥（异或处理）
     private static SecretKeySpec mysqlKey(String key) {
         byte[] finalKey = new byte[16];
         int i = 0;
@@ -75,6 +80,11 @@ public class AesUtil {
 
     /**
      * AES-CBC 加密，Base64 输出
+     *
+     * @param data      明文
+     * @param secretKey 密钥（自动补位到 256 位）
+     * @param ivStr     初始向量
+     * @return Base64 密文，失败返回 null
      */
     public static String encrypt(String data, String secretKey, String ivStr) {
         if (data == null) return null;
@@ -91,6 +101,11 @@ public class AesUtil {
 
     /**
      * AES-CBC 解密，Base64 输入
+     *
+     * @param data      Base64 密文
+     * @param secretKey 密钥
+     * @param ivStr     初始向量
+     * @return 明文，失败返回 null
      */
     public static String decrypt(String data, String secretKey, String ivStr) {
         if (data == null) return null;
@@ -105,6 +120,7 @@ public class AesUtil {
         }
     }
 
+    // 构建 256 位密钥（异或补位）
     private static SecretKeySpec aes256Key(String key) {
         byte[] finalKey = new byte[32];
         int i = 0;
@@ -117,7 +133,7 @@ public class AesUtil {
     // ==================== 随机密钥 ====================
 
     /**
-     * 生成 32 位随机密钥字符串
+     * 生成 32 位随机密钥
      */
     public static String initAESKey() {
         StringBuilder sb = new StringBuilder();

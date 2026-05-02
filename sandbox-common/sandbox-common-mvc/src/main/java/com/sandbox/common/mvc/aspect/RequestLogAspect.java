@@ -6,10 +6,7 @@ import com.alibaba.fastjson2.JSONWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -23,13 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 自动打印 @RestController 的请求参数、响应结果和耗时。
+ * Controller 请求日志切面
  *
- * <pre>
- * INFO - uri: /api/users  method:POST  params: ...  body: ...  headers: ...
- * INFO - uri: /api/users  result: { ... }
- * INFO - uri: /api/users  请求耗时: 156ms
- * </pre>
+ * <p>自动打印所有 @RestController 的请求参数、响应结果和耗时
  *
  * @author 0101
  * @since 2026-03-12
@@ -40,21 +33,25 @@ import java.util.Map;
 public class RequestLogAspect {
 
     private static final Logger log = LoggerFactory.getLogger(RequestLogAspect.class);
-    private final ThreadLocal<Long> startTime = new ThreadLocal<>();
+    private final ThreadLocal<Long> startTime = new ThreadLocal<>();  // 记录请求开始时间
 
+    // 拦截所有 @RestController 标注的类
     @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
-    private void controller() {}
+    private void controller() {
+    }
 
+    /**
+     * 前置通知：记录请求参数和请求头
+     */
     @Before("controller()")
     public void before(JoinPoint joinPoint) {
         try {
             startTime.set(System.currentTimeMillis());
-
             ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs == null) return;
             HttpServletRequest request = attrs.getRequest();
 
-            // 请求头
+            // 收集请求头
             Map<String, String> headers = new HashMap<>();
             Enumeration<String> names = request.getHeaderNames();
             while (names.hasMoreElements()) {
@@ -62,7 +59,7 @@ public class RequestLogAspect {
                 headers.put(name, request.getHeader(name));
             }
 
-            // 请求体
+            // 收集请求体（过滤 HttpServletRequest/HttpServletResponse）
             StringBuilder body = new StringBuilder();
             for (Object arg : joinPoint.getArgs()) {
                 if (arg instanceof HttpServletResponse || arg instanceof HttpServletRequest) continue;
@@ -81,6 +78,9 @@ public class RequestLogAspect {
         }
     }
 
+    /**
+     * 后置通知：记录响应结果和耗时
+     */
     @AfterReturning(returning = "result", pointcut = "controller()")
     public void afterReturning(Object result) {
         try {
@@ -88,6 +88,7 @@ public class RequestLogAspect {
             if (attrs == null) return;
             String uri = attrs.getRequest().getRequestURI();
 
+            // 格式化输出响应
             log.info("uri: {}  result: \n{}", uri,
                     JSON.toJSONString(JSONObject.parseObject(JSON.toJSONString(result)),
                             JSONWriter.Feature.PrettyFormat));

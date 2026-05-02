@@ -6,16 +6,9 @@ import com.alibaba.fastjson2.JSONObject;
 import java.util.Objects;
 
 /**
- * HTTP 响应结果解析工具，配合 {@link HttpRequestUtils} 使用。
+ * HTTP 响应解析工具
  *
- * <p>约定响应格式为 {@code {"code": "0", "msg": "success", "data": {...}}}。
- *
- * <pre>
- * JSONObject response = HttpRequestUtils.get("<a href="http://api.example.com/users">...</a>");
- * if (ResultUtil.isSuccess(response)) {
- *     UserDTO user = ResultUtil.getDataFieldObject(response, UserDTO.class);
- * }
- * </pre>
+ * <p>配合 HttpRequestUtils 使用，解析统一格式响应：{"code": "0", "msg": "...", "data": {...}}
  *
  * @author 0101
  * @since 2026-03-12
@@ -26,7 +19,7 @@ public class ResultUtil {
     }
 
     /**
-     * code = "0" 视为成功
+     * 判断响应是否成功（code = "0"）
      */
     public static boolean isSuccess(JSONObject result) {
         return result != null && Objects.equals(result.getString("code"), "0");
@@ -40,14 +33,14 @@ public class ResultUtil {
     }
 
     /**
-     * 整个响应转目标对象
+     * 将整个响应转换为目标对象
      */
     public static <T> T getDataObject(JSONObject result, Class<T> clazz) {
         return isSuccess(result) ? BeanUtil.copyProperties(result, clazz) : null;
     }
 
     /**
-     * data 字段转目标对象
+     * 将 data 字段转换为目标对象
      */
     public static <T> T getDataFieldObject(JSONObject result, Class<T> clazz) {
         JSONObject data = getJsonData(result);
