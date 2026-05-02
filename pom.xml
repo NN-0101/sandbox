@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.sandbox.services</groupId>
+    <artifactId>sandbox-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <name>SANDBOX</name>
+
+    <modules>
+        <module>sandbox-home</module>
+    </modules>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+    </parent>
+
+    <properties>
+        <!-- 版本配置 Begin -->
+        <revision>1.0.0</revision>
+        <!-- 版本配置 Begin -->
+
+        <!-- 基础环境配置 Begin -->
+        <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 基础环境配置 End -->
+
+        <!-- Maven插件版本 Begin -->
+        <maven_compiler_plugin.version>3.12.0</maven_compiler_plugin.version>
+        <maven_surefire_plugin.version>2.19.1</maven_surefire_plugin.version>
+        <!-- Maven插件版本 End -->
+
+        <!-- 核心框架版本 Begin -->
+        <spring-boot.version>3.5.14</spring-boot.version>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <spring-cloud-alibaba.version>2023.0.3.4</spring-cloud-alibaba.version>
+        <!-- 核心框架版本 End -->
+
+        <!-- 数据校验版本 Begin -->
+        <jakarta_validation.version>3.0.2</jakarta_validation.version>
+        <!-- 数据校验版本 End -->
+
+        <!-- 数据库相关版本 Begin -->
+        <mysql.version>8.0.28</mysql.version>
+        <druid.version>1.2.21</druid.version>
+        <sharding-jdbc-core.version>5.0.0</sharding-jdbc-core.version>
+        <!-- 数据库相关版本 End -->
+
+        <!-- ORM框架版本 Begin -->
+        <mybatis.version>3.0.3</mybatis.version>
+        <mybatis-plus.version>3.5.5</mybatis-plus.version>
+        <!-- ORM框架版本 End -->
+
+        <!-- 安全加密版本 Begin -->
+        <jasypt.version>3.0.3</jasypt.version>
+        <!-- 安全加密版本 End -->
+
+        <!-- 通用工具类版本 Begin -->
+        <commons-lang3.version>3.12.0</commons-lang3.version>
+        <lombok.version>1.18.20</lombok.version>
+        <fastjson.version>2.0.53</fastjson.version>
+        <hutool-core.version>5.8.26</hutool-core.version>
+        <aspectjweaver.version>1.9.7</aspectjweaver.version>
+        <!-- 通用工具类版本 End -->
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring AI Begin -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>1.1.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring AI End -->
+
+            <!-- Spring Cloud Begin-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring Cloud End-->
+
+            <!--Aop Begin-->
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspectjweaver.version}</version>
+            </dependency>
+            <!--Aop End-->
+
+            <!--TLog Begin-->
+            <dependency>
+                <groupId>com.yomahub</groupId>
+                <artifactId>tlog-all-spring-boot-starter</artifactId>
+                <version>1.5.2</version>
+            </dependency>
+            <!--TLog End-->
+
+            <!--logstash Begin-->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>7.4</version>
+            </dependency>
+            <!--logstash End-->
+
+            <!--Data Source Begin-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>shardingsphere-jdbc-core</artifactId>
+                <version>${sharding-jdbc-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-3-starter</artifactId>
+                <version>1.2.27</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>shardingsphere-sql-parser-mysql</artifactId>
+                <version>${sharding-jdbc-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>4.9.2</version>
+            </dependency>
+            <!--Data Source End-->
+
+            <!--Jasypt 加密 Begin-->
+            <dependency>
+                <groupId>com.github.ulisesbocchio</groupId>
+                <artifactId>jasypt-spring-boot-starter</artifactId>
+                <version>${jasypt.version}</version>
+            </dependency>
+            <!--Jasypt 解密 End-->
+
+            <!-- Spring Authorization Server Begin-->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-oauth2-authorization-server</artifactId>
+                <version>1.4.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-cas</artifactId>
+                <version>6.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- Spring Authorization Server End-->
+
+            <!-- Redis Begin-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- Redis End-->
+
+            <!-- validation 参数校验 Begin -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-validation</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${jakarta_validation.version}</version>
+            </dependency>
+            <!-- validation 参数校验 End -->
+
+            <!-- Netty Begin-->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.1.116.Final</version>
+            </dependency>
+            <!-- Netty End-->
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!--Common Tool Begin-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>${fastjson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>${hutool-core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.5.0-M3</version>
+        </dependency>
+        <!--Common Tool End-->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven_compiler_plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <release>${java.version}</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven_surefire_plugin.version}</version>
+                <configuration>
+                    <parallel>classes</parallel>
+                    <threadCount>10</threadCount>
+                    <systemPropertyVariables>
+                        <jacoco-agent.destfile>${project.build.directory}/coverage.exec</jacoco-agent.destfile>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <profileActive>dev</profileActive>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <profileActive>test</profileActive>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <profileActive>prod</profileActive>
+            </properties>
+        </profile>
+    </profiles>
+</project>

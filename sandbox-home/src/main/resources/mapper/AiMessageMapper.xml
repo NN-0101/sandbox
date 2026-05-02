@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sandbox.home.mapper.AiMessageMapper">
+
+    <resultMap type="com.sandbox.home.entity.AiMessageDO" id="AiMessageMap">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="conversationId" column="conversation_id" jdbcType="VARCHAR"/>
+        <result property="messageType" column="message_type" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="metadata" column="metadata" jdbcType="VARCHAR"/>
+        <result property="delFlag" column="del_flag" jdbcType="INTEGER"/>
+        <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
+        <result property="updateDate" column="update_date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+`id`, `conversation_id`, `message_type`, `content`, `metadata`, `del_flag`, `create_date`, `update_date`    </sql>
+    
+    <sql id="Insert_Base_Column_List">
+`id`, `conversation_id`, `message_type`, `content`, `metadata`
+    </sql>
+    
+    <!-- 批量插入 -->
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO
+            t_ai_message
+        (<include refid="Insert_Base_Column_List"/>)
+        VALUES
+        <foreach collection="entities" item="entity" separator=",">
+        (#{entity.id}, #{entity.conversationId}, #{entity.messageType}, #{entity.content}, #{entity.metadata})
+        </foreach>
+    </insert>
+</mapper>
+

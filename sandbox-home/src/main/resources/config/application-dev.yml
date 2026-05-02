@@ -1,0 +1,180 @@
+spring:
+  config:
+    activate:
+      # 指定当前生效的配置文件
+      on-profile: dev
+    #显式导入外部配置 Nacos
+    import:
+      - optional:nacos:${spring.application.name}-${spring.config.activate.on-profile}.${spring.cloud.nacos.config.file-extension}
+
+  cloud:
+    nacos:
+      config:
+        # Nacos 服务器地址
+        server-addr: localhost:8848
+        # 命名空间 ID（可选）
+        namespace: 276b89aa-db62-47ef-b05a-6f14fdd23da2
+        # 配置分组（默认 DEFAULT_GROUP）
+        group: DEFAULT_GROUP
+        # 配置格式（yaml 或 properties）
+        file-extension: yaml
+        # 启用动态刷新
+        refresh-enabled: true
+        username: nacos
+        password: nacos
+
+      discovery:
+        server-addr: localhost:8848
+        namespace: 276b89aa-db62-47ef-b05a-6f14fdd23da2
+        username: nacos
+        password: nacos
+
+  ai:
+    openai:
+      api-key: sk-58fae916b57e4725a9f2d4b97e948fd3
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.7
+      embedding:
+        api-key: sk-igytzpxsqvvzgytmunbeshyrdirznvpflvwlxcngkiolzuki  # SiliconFlow 的 key
+        base-url: https://api.siliconflow.cn  # 注意路径必须是完整端点
+        options:
+          model: netease-youdao/bce-embedding-base_v1
+  data:
+    redis:
+      # 新版本配置（Spring Boot 3.0+）
+      host: localhost
+      port: 6379
+      username: default
+      password: 123456
+      database: 0
+      # 连接超时配置
+      connect-timeout: 2000ms
+      # 命令执行超时
+      timeout: 5000ms
+      # SSL配置
+      ssl:
+        enabled: false         # 是否启用SSL
+      # 客户端类型配置（lettuce默认）
+      client-type: lettuce
+      # Lettuce连接池配置
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+
+# Sharding 数据源配置
+sharding:
+  ds0:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/sandbox_home?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowMultiQueries=true&rewriteBatchedStatements=true
+    username: root
+    password: 123456
+
+  ds1:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/sandbox_home?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowMultiQueries=true&rewriteBatchedStatements=true
+    username: root
+    password: 123456
+
+  ds0slave0:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/sandbox_home?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowMultiQueries=true&rewriteBatchedStatements=true
+    username: root
+    password: 123456
+
+  ds1slave0:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/sandbox_home?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowMultiQueries=true&rewriteBatchedStatements=true
+    username: root
+    password: 123456
+
+  basic:
+    # 基础连接池配置
+    max-active: 20
+    min-idle: 5
+    initial-size: 1                    # 降低初始连接数，加快启动
+
+    # 连接等待配置
+    max-wait: 10000
+
+    # 连接泄漏检测 - 生产环境关闭
+    remove-abandoned: false             # 关键：关闭removeAbandoned
+    remove-abandoned-timeout: 1800
+    log-abandoned: false
+
+    # 空闲连接检查
+    time-between-eviction-runs-millis: 60000
+    min-evictable-idle-time-millis: 300000
+
+    # 连接测试配置 - 优化启动速度
+    validation-query: SELECT 1
+    test-while-idle: true
+    test-on-borrow: false                # 关闭borrow时测试
+    test-on-return: false                # 关闭return时测试
+
+#数局库字段加密 配置
+aes:
+  key: 7F2A8C3B9D4E5F1A6B2C3D4E5F6A7B8C
+#  tables:
+#    t_user:
+#      - real_name
+#      - phone
+#      - email
+#      - id_number
+
+# Mybatis-Plus 配置
+mybatis-plus:
+  datacenter-id: 0
+  mapper-locations: classpath*:mapper/**/*.xml  # Mapper XML 文件位置
+  global-config:
+    db-config:
+      id-type: assign_id  # 主键ID策略
+
+# 日志打印级别
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        web: DEBUG
+    com.sandbox.services.living.netty.websocket.handler.device.DeviceAudioDataHandler: DEBUG
+
+# 业务配置
+business-config:
+  no-auth-urls:
+    - /chat/**
+  prompts:
+    db: >-
+      ## 角色
+      你是一个专业的数据分析专家，并且精通根据用户的问题、数据表结构进行生成SQL语句进行查询数据库。
+      
+      ## 背景
+      根据用户的问题，准确确定用户需求，首先查看数据库表中的数据表结构，然后编写准确的并且可直接运行的SQL语句进行统计和查询数据库中的数据，并且返回相关数据，对于用户的工作效率提升十分重要。
+      
+      ## 任务
+      根据用户的相关问题，首先查询知识库查看大概的数据表结构，然后编写可执行的MySQL语句并且调用"查询数据库"工具进行查询数据库，用于最后满足用户的需求。对于用户需要查询数据库的需求务必调用"查询数据库"工具。
+      
+      ## 逻辑推理过程
+      1. 查询知识库了解数据库表结构
+      2. 按照用户需求分析查询条件和所需结果
+      3. 编写准确的MySQL查询语句
+      4. 确保SQL语句语法正确且高效
+      5. 利用"查询数据库"工具执行SQL语句
+      6. 返回查询结果并为用户提供解释
+      7. 根据需要优化SQL语句以提高查询效率
+      8.数据库中有加密字段：phone，id_num。对于加密字段，当作为查询条件的时候，需要先加密，例如phone = HEX(AES_ENCRYPT(‘‘明文手机号’’,'771EDC69C12DD144086F0AD00500BECE'))；当作为查询字段的时候需要解密展示，例如 AES_DECRYPT(UNHEX(phone),'771EDC69C12DD144086F0AD00500BECE')。然后加密字段展示的时候需要对其部分字符脱敏展示，将部分字符串替换为字符 “*”
+      9.不需要展示sql语句
+      10.只能支持查询操作，如果用户要执行删除，修改操作则提示 “暂不支持该功能”
+      
+      ## 输出最终回答
+      查询数据库工具返回的内容可能是Unicode编码的，请你先梳理返回的数据有哪些，由于数据可能是Unicode格式，首先必须先对查询到的结果进行一个梳理和思考，保证每一个结果的名称在回答用户问题的时候是正确的，然后根据用户的问题进行一步步逻辑推导出用户问题的最终正确答案或者最合适的回答，所有回答内容必须使用markdown格式返回,不准展示推理过程和sql语句,只需要给出最终答案。

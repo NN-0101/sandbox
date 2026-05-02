@@ -1,0 +1,25 @@
+server:
+  port: 1010
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+    context-path: /home-core
+  error:
+    whitelabel:
+      enabled: false # 禁用默认错误页面
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  web:
+    resources:
+      add-mappings: false # 禁用默认的静态资源映射
+  application:
+    name: home-core
+
+netty:
+  device:
+    port: 9001
+    server-name: home-device-websocket
