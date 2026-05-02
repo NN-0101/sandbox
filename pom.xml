@@ -12,6 +12,7 @@
 
     <modules>
         <module>sandbox-common</module>
+        <module>sandbox-demo</module>
         <module>sandbox-home</module>
     </modules>
 

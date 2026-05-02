@@ -39,8 +39,8 @@
             <version>${shardingsphere.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
         <!--Data Source End-->
     </dependencies>
