@@ -1,4 +1,4 @@
-# MyHome
+# Sandbox
 
 > 不想再做没有灵魂的 CRUD，用真实需求驱动技术成长，拥抱 AI+。Scratching my own itch.
 
