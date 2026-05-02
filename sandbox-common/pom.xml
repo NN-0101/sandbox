@@ -19,5 +19,6 @@
     <modules>
         <module>sandbox-common-base</module>
         <module>sandbox-common-mvc</module>
+        <module>sandbox-common-mysql</module>
     </modules>
 </project>

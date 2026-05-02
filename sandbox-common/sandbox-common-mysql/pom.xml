@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sandbox.services</groupId>
+        <artifactId>sandbox-common</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>sandbox-common-mysql</artifactId>
+    <version>${revision}</version>
+    <name>sandbox-common-mysql</name>
+    <description>mysql 数据库配置</description>
+
+    <properties>
+        <!-- 子模块独立控制 ShardingSphere 版本 -->
+        <shardingsphere.version>5.3.2</shardingsphere.version>
+    </properties>
+
+    <dependencies>
+        <!--Data Source Begin-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-jdbc-core</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-sql-parser-mysql</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+        </dependency>
+        <!--Data Source End-->
+    </dependencies>
+</project>
