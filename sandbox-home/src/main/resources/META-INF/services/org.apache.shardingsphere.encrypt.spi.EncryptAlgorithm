@@ -1,1 +1,1 @@
-com.home.services.config.encrypt.CustomAesEncryptor
+com.sandbox.home.config.algorithm.CustomAesEncryptAlgorithm

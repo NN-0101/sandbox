@@ -1,0 +1,2 @@
+com.sandbox.home.config.algorithm.DatabaseShardingAlgorithm
+com.sandbox.home.config.algorithm.TableShardingAlgorithm

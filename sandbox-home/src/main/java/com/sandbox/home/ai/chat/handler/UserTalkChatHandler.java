@@ -29,7 +29,7 @@ public class UserTalkChatHandler implements BaseChatMessage {
     @Override
     public Flux<String> sendMessage(String prompt, String conversationId, String message) {
         return chatClient
-                .prompt(prompt)
+                .prompt("聊天")
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .stream()

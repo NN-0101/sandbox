@@ -1,78 +1,83 @@
 package com.sandbox.home.config;
 
-import org.apache.shardingsphere.encrypt.api.config.EncryptRuleConfiguration;
-import org.apache.shardingsphere.encrypt.api.config.rule.EncryptColumnRuleConfiguration;
-import org.apache.shardingsphere.encrypt.api.config.rule.EncryptTableRuleConfiguration;
-import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shardingsphere.encrypt.config.EncryptRuleConfiguration;
+import org.apache.shardingsphere.encrypt.config.rule.EncryptColumnItemRuleConfiguration;
+import org.apache.shardingsphere.encrypt.config.rule.EncryptColumnRuleConfiguration;
+import org.apache.shardingsphere.encrypt.config.rule.EncryptTableRuleConfiguration;
+import org.apache.shardingsphere.infra.algorithm.core.config.AlgorithmConfiguration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 /**
- * ShardingSphere 加密规则配置
+ * 字段加密配置
  * <p>
- * 根据 TableEncryptConfig 中的表-字段映射，动态构建加密规则，使用 AES 密钥对指定字段自动加解密。
- * 加密过程对业务代码透明，无需手动处理。
+ * 从 yml 读取需要加密的表和字段，自动生成 ShardingSphere 加密规则。
+ * 使用自定义 AES 算法，支持加解密和等值查询。
  *
  * @author 0101
- * @since 2026-03-13
+ * @since 2026-05-06
  */
+@Slf4j
 @Configuration
 public class EncryptConfig {
 
-    @Value("${aes.key}")
+    @Value("${sharding.aes.key}")
     private String aesKey;
 
     @Resource
-    private TableEncryptConfig tableEncryptConfig;
+    private DataSourceConfig dataSourceConfig;
 
     /**
      * 构建加密规则配置
      * <p>
-     * 遍历 TableEncryptConfig 中所有表和字段，为每个字段创建加密列规则，
-     * 统一使用 "custom_aes" 加密器和配置文件中的 AES 密钥。
-     *
-     * @return 加密规则配置，无加密表时返回 null
+     * 遍历 yml 中配置的表和字段，为每个字段生成密文列规则，
+     * 未配置加密时返回空表规则。
      */
-    public EncryptRuleConfiguration buildEncryptRule() {
-        Map<String, List<String>> tables = tableEncryptConfig.getTables();
+    @Bean
+    public EncryptRuleConfiguration encryptRuleConfiguration() {
+        // 注册加密算法
+        Properties algoProps = new Properties();
+        algoProps.setProperty("aes-key-value", aesKey);
 
-        if (tables == null || tables.isEmpty()) {
-            return null;
+        Map<String, AlgorithmConfiguration> encryptors = new HashMap<>();
+        encryptors.put("custom_aes", new AlgorithmConfiguration("CUSTOM_AES", algoProps));
+
+        // 获取 yml 中的加密表配置
+        DataSourceConfig.EncryptConfigItem encryptConfig = dataSourceConfig.getEncrypt();
+        if (encryptConfig == null || encryptConfig.getTables() == null || encryptConfig.getTables().isEmpty()) {
+            log.info("未配置字段加密");
+            return new EncryptRuleConfiguration(Collections.emptyList(), encryptors);
         }
 
-        List<EncryptTableRuleConfiguration> encryptTableRuleConfigurations = new ArrayList<>(tables.size());
+        List<EncryptTableRuleConfiguration> tables = new ArrayList<>();
 
-        for (Map.Entry<String, List<String>> encryptMap : tables.entrySet()) {
-            String tableName = encryptMap.getKey();
-            List<String> encryptColumns = encryptMap.getValue();
+        for (DataSourceConfig.EncryptTableItem tableItem : encryptConfig.getTables()) {
+            List<EncryptColumnRuleConfiguration> columns = new ArrayList<>();
+            List<String> columnNames = new ArrayList<>();
 
-            List<EncryptColumnRuleConfiguration> encryptColumnConfigList = new ArrayList<>(encryptColumns.size());
-            for (String encryptColumn : encryptColumns) {
-                EncryptColumnRuleConfiguration encryptColumnConfig = new EncryptColumnRuleConfiguration(
-                        encryptColumn, encryptColumn, "", "", "custom_aes");
-                encryptColumnConfigList.add(encryptColumnConfig);
+            for (String columnName : tableItem.getColumns()) {
+                // 每个字段绑定 custom_aes 加密器
+                EncryptColumnItemRuleConfiguration cipherItem = new EncryptColumnItemRuleConfiguration(columnName, "custom_aes");
+                EncryptColumnRuleConfiguration columnConfig = new EncryptColumnRuleConfiguration(columnName, cipherItem);
+                columns.add(columnConfig);
+
+                columnNames.add(columnName);
             }
 
-            EncryptTableRuleConfiguration tableRuleConfiguration = new EncryptTableRuleConfiguration(
-                    tableName, encryptColumnConfigList, true);
-            encryptTableRuleConfigurations.add(tableRuleConfiguration);
+            tables.add(new EncryptTableRuleConfiguration(tableItem.getTableName(), columns));
+            log.info("表 [{}] 加密字段: {}", tableItem.getTableName(), columnNames);
         }
 
-        Properties props = new Properties();
-        props.setProperty("aes.key.value", aesKey);
-
-        ShardingSphereAlgorithmConfiguration aesAlgorithm =
-                new ShardingSphereAlgorithmConfiguration("mysql", props);
-
-        return new EncryptRuleConfiguration(
-                encryptTableRuleConfigurations,
-                Collections.singletonMap("custom_aes", aesAlgorithm));
+        return new EncryptRuleConfiguration(tables, encryptors);
     }
 }

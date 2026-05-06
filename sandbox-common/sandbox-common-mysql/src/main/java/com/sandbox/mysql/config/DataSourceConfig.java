@@ -164,7 +164,7 @@ public class DataSourceConfig {
         /**
          * 分片数量（1 表示不分片）
          */
-        private int count;
+        private int count = 1;
     }
 
     /**

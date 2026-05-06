@@ -31,7 +31,7 @@ spring:
 
   ai:
     openai:
-      api-key: sk-58fae916b57e4725a9f2d4b97e948fd3
+      api-key: sk-5a2c160b46284f5dbec54f6688c5873c
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -122,15 +122,19 @@ sharding:
     test-on-borrow: false                # 关闭borrow时测试
     test-on-return: false                # 关闭return时测试
 
-#数局库字段加密 配置
-aes:
-  key: 7F2A8C3B9D4E5F1A6B2C3D4E5F6A7B8C
-#  tables:
-#    t_user:
-#      - real_name
-#      - phone
-#      - email
-#      - id_number
+  #数局库字段加密 配置
+  aes:
+    key: 7F2A8C3B9D4E5F1A6B2C3D4E5F6A7B8C
+  # ========== 加密配置 ==========
+  encrypt:
+    tables:
+      - table-name: t_ai_conversation
+        columns:
+          - identifier
+  # ========== 分库分表配置 ==========
+  rules:
+    - tableName: t_ai_message
+    - tableName: t_ai_conversation
 
 # Mybatis-Plus 配置
 mybatis-plus:
