@@ -1,4 +1,4 @@
-package com.sandbox.demo.mysql.config.prop;
+package com.sandbox.mysql.prop;
 
 import lombok.Data;
 
@@ -11,18 +11,28 @@ import lombok.Data;
 @Data
 public class JdbcDsProp {
 
-    /** 连接池实现类全限定名 */
+    /**
+     * 连接池实现类全限定名
+     */
     private String type;
 
-    /** JDBC 驱动类名 */
+    /**
+     * JDBC 驱动类名
+     */
     private String driverClassName;
 
-    /** 数据库连接 URL */
+    /**
+     * 数据库连接 URL
+     */
     private String jdbcUrl;
 
-    /** 数据库用户名 */
+    /**
+     * 数据库用户名
+     */
     private String username;
 
-    /** 数据库密码 */
+    /**
+     * 数据库密码
+     */
     private String password;
 }

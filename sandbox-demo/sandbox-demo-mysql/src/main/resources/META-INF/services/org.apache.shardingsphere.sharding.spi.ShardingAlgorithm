@@ -1,2 +1,2 @@
-com.sandbox.demo.mysql.algorithm.PhoneDatabaseShardingAlgorithm
-com.sandbox.demo.mysql.algorithm.IdTableShardingAlgorithm
+com.sandbox.mysql.algorithm.DatabaseShardingAlgorithm
+com.sandbox.mysql.algorithm.TableShardingAlgorithm

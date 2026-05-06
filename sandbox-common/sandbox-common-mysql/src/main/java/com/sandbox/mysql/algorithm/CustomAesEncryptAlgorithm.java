@@ -1,4 +1,4 @@
-package com.sandbox.demo.mysql.encrypt;
+package com.sandbox.mysql.algorithm;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.shardingsphere.encrypt.spi.EncryptAlgorithm;

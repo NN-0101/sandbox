@@ -1,4 +1,4 @@
-package com.sandbox.demo.mysql.config;
+package com.sandbox.mysql.config;
 
 import com.baomidou.mybatisplus.core.incrementer.DefaultIdentifierGenerator;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;

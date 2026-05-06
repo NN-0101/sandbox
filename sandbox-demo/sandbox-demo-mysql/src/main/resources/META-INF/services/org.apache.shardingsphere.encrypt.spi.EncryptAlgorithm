@@ -1,1 +1,1 @@
-com.sandbox.demo.mysql.encrypt.CustomAesEncryptAlgorithm
+com.sandbox.mysql.algorithm.CustomAesEncryptAlgorithm

@@ -1,4 +1,4 @@
-package com.sandbox.demo.mysql.util;
+package com.sandbox.mysql.util;
 
 import javax.sql.DataSource;
 

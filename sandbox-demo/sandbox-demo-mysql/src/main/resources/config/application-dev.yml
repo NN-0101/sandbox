@@ -52,9 +52,53 @@ sharding:
     test-on-borrow: false                # 关闭borrow时测试
     test-on-return: false                # 关闭return时测试
 
-#数局库字段加密 配置
-aes:
-  key: 7F2A8C3B9D4E5F1A6B2C3D4E5F6A7B8C
+  #数局库字段加密 配置
+  aes:
+    key: 7F2A8C3B9D4E5F1A6B2C3D4E5F6A7B8C
+  # ========== 加密配置 ==========
+  encrypt:
+    tables:
+      - table-name: t_user
+        columns:
+          - phone
+      - table-name: t_order
+        columns:
+          - receiver_phone
+          - receiver_address
+  # ========== 分库分表配置 ==========
+  rules:
+    - table-name: t_user                    # 逻辑表名
+      database-sharding:
+        sharding-column: phone              # 分库字段
+        algorithm-type: DB_MOD              # 算法类型
+        count: 2                            # 分库数量
+      table-sharding:
+        sharding-column: id                 # 分表字段
+        algorithm-type: TABLE_MOD           # 算法类型
+        count: 2                            # 分表数量
+
+    # 只分表（不分库）
+    - table-name: t_config
+      database-sharding:
+        count: 1                            # count=1 即不分库
+        sharding-column: ""
+        algorithm-type: ""
+      table-sharding:
+        sharding-column: config_key
+        algorithm-type: TABLE_MOD
+        count: 4
+
+    # 只分库（不分表）
+    - table-name: t_log
+      database-sharding:
+        sharding-column: user_id
+        algorithm-type: DB_MOD
+        count: 2
+      table-sharding:
+        count: 1                            # count=1 即不分表
+        sharding-column: ""
+        algorithm-type: ""
+
 
 # Mybatis-Plus 配置
 mybatis-plus:

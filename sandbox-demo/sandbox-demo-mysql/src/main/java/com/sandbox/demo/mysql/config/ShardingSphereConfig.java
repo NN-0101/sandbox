@@ -1,5 +1,6 @@
 package com.sandbox.demo.mysql.config;
 
+import com.sandbox.mysql.config.DataSourceConfig;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
@@ -19,6 +20,12 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.*;
 
+/**
+ * ShardingSphere 5.5.1数据源配置
+ * <p>
+ * 整合读写分离 + 分库分表 + 数据加密，创建统一的数据源。
+ * 分库分表规则从 yml 配置中读取，支持多表配置。
+ */
 @Slf4j
 @Configuration
 public class ShardingSphereConfig {
@@ -26,18 +33,26 @@ public class ShardingSphereConfig {
     @Resource
     private EncryptRuleConfiguration encryptRuleConfiguration;
 
+    @Resource
+    private DataSourceConfig dataSourceConfig;
+
+    /**
+     * 创建 ShardingSphere 数据源（读写分离 + 分库分表 + 加密）
+     */
     @Bean
     @Primary
     public DataSource shardingSphereDataSource(DataSource ds0DataSource,
                                                DataSource ds1DataSource,
                                                DataSource ds0slave0DataSource,
                                                DataSource ds1slave0DataSource) throws SQLException {
+        // 数据源映射
         Map<String, DataSource> dataSourceMap = new LinkedHashMap<>();
         dataSourceMap.put("ds0", ds0DataSource);
         dataSourceMap.put("ds1", ds1DataSource);
         dataSourceMap.put("ds0slave0", ds0slave0DataSource);
         dataSourceMap.put("ds1slave0", ds1slave0DataSource);
 
+        // 规则配置
         Collection<RuleConfiguration> ruleConfigs = new ArrayList<>();
         ruleConfigs.add(createReadwriteSplittingRule());
         ruleConfigs.add(createShardingRule());
@@ -46,23 +61,23 @@ public class ShardingSphereConfig {
         Properties props = new Properties();
         props.setProperty("sql-show", Boolean.TRUE.toString());
 
-        DataSource dataSource = ShardingSphereDataSourceFactory.createDataSource(
-                dataSourceMap, ruleConfigs, props);
+        DataSource dataSource = ShardingSphereDataSourceFactory.createDataSource(dataSourceMap, ruleConfigs, props);
         log.info("ShardingSphere 数据源创建成功（读写分离 + 分库分表）");
         return dataSource;
     }
 
+    /**
+     * 读写分离规则：datasource0 → 写 ds0 / 读 ds0slave0，datasource1 → 写 ds1 / 读 ds1slave0
+     */
     private ReadwriteSplittingRuleConfiguration createReadwriteSplittingRule() {
-        // datasource0：写 ds0，读 ds0slave0
         ReadwriteSplittingDataSourceGroupRuleConfiguration ds0Group =
                 new ReadwriteSplittingDataSourceGroupRuleConfiguration(
-                        "datasource0",              // name
-                        "ds0",                      // writeDataSourceName
-                        Collections.singletonList("ds0slave0"), // readDataSourceNames
-                        ""                          // loadBalancerName（空串 = 默认轮询）
+                        "datasource0",
+                        "ds0",
+                        Collections.singletonList("ds0slave0"),
+                        ""
                 );
 
-        // datasource1：写 ds1，读 ds1slave0
         ReadwriteSplittingDataSourceGroupRuleConfiguration ds1Group =
                 new ReadwriteSplittingDataSourceGroupRuleConfiguration(
                         "datasource1",
@@ -71,32 +86,119 @@ public class ShardingSphereConfig {
                         ""
                 );
 
-        return new ReadwriteSplittingRuleConfiguration(
-                Arrays.asList(ds0Group, ds1Group),
-                new HashMap<>()
-        );
+        return new ReadwriteSplittingRuleConfiguration(Arrays.asList(ds0Group, ds1Group), new HashMap<>());
     }
 
+    /**
+     * 分库分表规则：从 yml 配置中读取，动态生成 actualDataNodes 和算法配置
+     */
     private ShardingRuleConfiguration createShardingRule() {
         ShardingRuleConfiguration config = new ShardingRuleConfiguration();
 
-        ShardingTableRuleConfiguration tableRuleConfig =
-                new ShardingTableRuleConfiguration("t_user",
-                        "datasource${0..1}.t_user_${0..1}");
+        List<DataSourceConfig.ShardingRuleItem> rules = dataSourceConfig.getRules();
+        if (rules == null || rules.isEmpty()) {
+            log.warn("未配置分库分表规则");
+            return config;
+        }
 
-        tableRuleConfig.setDatabaseShardingStrategy(
-                new StandardShardingStrategyConfiguration("phone", "PHONE_DB_MOD"));
-        tableRuleConfig.setTableShardingStrategy(
-                new StandardShardingStrategyConfiguration("id", "ID_TABLE_MOD"));
+        Set<String> registeredAlgorithms = new HashSet<>();
 
-        config.getTables().add(tableRuleConfig);
+        for (DataSourceConfig.ShardingRuleItem rule : rules) {
+            String tableName = rule.getTableName();
+            DataSourceConfig.ShardingItem dbSharding = rule.getDatabaseSharding();
+            DataSourceConfig.ShardingItem tblSharding = rule.getTableSharding();
 
-        // 算法只需要注册空的 AlgorithmConfiguration，因为我们在 SPI 中已经实现了
-        config.getShardingAlgorithms().put("PHONE_DB_MOD",
-                new AlgorithmConfiguration("PHONE_DB_MOD", new Properties()));
-        config.getShardingAlgorithms().put("ID_TABLE_MOD",
-                new AlgorithmConfiguration("ID_TABLE_MOD", new Properties()));
+            boolean needDbSharding = needSharding(dbSharding);
+            boolean needTblSharding = needSharding(tblSharding);
+
+            // 生成 actualDataNodes
+            String actualDataNodes = buildActualDataNodes(tableName, dbSharding, tblSharding);
+
+            ShardingTableRuleConfiguration tableRuleConfig = new ShardingTableRuleConfiguration(tableName, actualDataNodes);
+
+            // 配置分库策略
+            if (needDbSharding) {
+                tableRuleConfig.setDatabaseShardingStrategy(new StandardShardingStrategyConfiguration(dbSharding.getShardingColumn(), dbSharding.getAlgorithmType()));
+                registerDbAlgorithm(config, dbSharding, registeredAlgorithms);
+            }
+
+            // 配置分表策略
+            if (needTblSharding) {
+                tableRuleConfig.setTableShardingStrategy(new StandardShardingStrategyConfiguration(tblSharding.getShardingColumn(), tblSharding.getAlgorithmType()));
+                registerTblAlgorithm(config, tblSharding, tableName, registeredAlgorithms);
+            }
+
+            config.getTables().add(tableRuleConfig);
+
+            log.info("配置分片规则: {} → 库:{} / 表:{}",
+                    tableName,
+                    needDbSharding ? "[" + dbSharding.getShardingColumn() + "](" + dbSharding.getCount() + "个)" : "不分库",
+                    needTblSharding ? "[" + tblSharding.getShardingColumn() + "](" + tblSharding.getCount() + "个)" : "不分表");
+        }
 
         return config;
+    }
+
+    /**
+     * 判断是否需要分片（count > 1 且配置了分片字段）
+     */
+    private boolean needSharding(DataSourceConfig.ShardingItem item) {
+        return item != null && item.getCount() > 1 && item.getShardingColumn() != null && !item.getShardingColumn().isEmpty();
+    }
+
+    /**
+     * 构建 actualDataNodes
+     * <p>
+     * 分库+分表：datasource${0..1}.t_user_${0..1}
+     * 只分库：   datasource${0..1}.t_user
+     * 只分表：   datasource0.t_user_${0..3}
+     * 都不分：   datasource0.t_user
+     */
+    private String buildActualDataNodes(String tableName, DataSourceConfig.ShardingItem dbSharding, DataSourceConfig.ShardingItem tblSharding) {
+        boolean needDb = needSharding(dbSharding);
+        boolean needTbl = needSharding(tblSharding);
+
+        String dbPart;
+        if (needDb) {
+            dbPart = "datasource${0.." + (dbSharding.getCount() - 1) + "}";
+        } else {
+            dbPart = "datasource0";  // 不分库默认走第一个库
+        }
+
+        String tblPart;
+        if (needTbl) {
+            tblPart = tableName + "_${0.." + (tblSharding.getCount() - 1) + "}";
+        } else {
+            tblPart = tableName;
+        }
+
+        return dbPart + "." + tblPart;
+    }
+
+    /**
+     * 注册分库算法
+     */
+    private void registerDbAlgorithm(ShardingRuleConfiguration config, DataSourceConfig.ShardingItem dbSharding, Set<String> registeredAlgorithms) {
+        String algoType = dbSharding.getAlgorithmType();
+        if (!registeredAlgorithms.contains(algoType)) {
+            Properties props = new Properties();
+            props.setProperty("database-count", String.valueOf(dbSharding.getCount()));
+            config.getShardingAlgorithms().put(algoType, new AlgorithmConfiguration(algoType, props));
+            registeredAlgorithms.add(algoType);
+        }
+    }
+
+    /**
+     * 注册分表算法
+     */
+    private void registerTblAlgorithm(ShardingRuleConfiguration config, DataSourceConfig.ShardingItem tblSharding, String tableName, Set<String> registeredAlgorithms) {
+        String algoType = tblSharding.getAlgorithmType();
+        if (!registeredAlgorithms.contains(algoType)) {
+            Properties props = new Properties();
+            props.setProperty("table-count", String.valueOf(tblSharding.getCount()));
+            props.setProperty("table-name", tableName);
+            config.getShardingAlgorithms().put(algoType, new AlgorithmConfiguration(algoType, props));
+            registeredAlgorithms.add(algoType);
+        }
     }
 }

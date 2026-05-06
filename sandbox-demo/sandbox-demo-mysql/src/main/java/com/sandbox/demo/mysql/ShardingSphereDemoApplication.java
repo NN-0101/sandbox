@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author 0101
  * @since 2026-05-02
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.sandbox.**"})
 public class ShardingSphereDemoApplication {
 
     public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package com.sandbox.demo.mysql.config.prop;
+package com.sandbox.mysql.prop;
 
 import lombok.Data;
 
