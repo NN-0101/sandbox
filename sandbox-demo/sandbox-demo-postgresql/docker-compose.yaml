@@ -1,0 +1,99 @@
+services:
+  # ==================== 组0：主库 pg0 ====================
+  pg-ds0:
+    image: postgres:14
+    container_name: pg-ds0
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres_demo
+    volumes:
+      - pg_ds0_data:/var/lib/postgresql/data
+    command: |
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c wal_keep_size=64
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_statement=all
+    networks:
+      - "0101"
+
+  # ==================== 组0：从库 pg0slave0 ====================
+  pg-ds0slave0:
+    image: postgres:14
+    container_name: pg-ds0slave0
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres_demo
+    volumes:
+      - pg_ds0slave0_data:/var/lib/postgresql/data
+    command: |
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_statement=all
+    networks:
+      - "0101"
+
+  # ==================== 组1：主库 pg1 ====================
+  pg-ds1:
+    image: postgres:14
+    container_name: pg-ds1
+    restart: unless-stopped
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres_demo
+    volumes:
+      - pg_ds1_data:/var/lib/postgresql/data
+    command: |
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c wal_keep_size=64
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_statement=all
+    networks:
+      - "0101"
+
+  # ==================== 组1：从库 pg1slave0 ====================
+  pg-ds1slave0:
+    image: postgres:14
+    container_name: pg-ds1slave0
+    restart: unless-stopped
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres_demo
+    volumes:
+      - pg_ds1slave0_data:/var/lib/postgresql/data
+    command: |
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_statement=all
+    networks:
+      - "0101"
+
+networks:
+  "0101":
+    name: "0101"
+    driver: bridge
+
+volumes:
+  pg_ds0_data:
+  pg_ds0slave0_data:
+  pg_ds1_data:
+  pg_ds1slave0_data:

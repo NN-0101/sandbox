@@ -1,0 +1,113 @@
+services:
+  # ==================== 组0：主库 ds0 ====================
+  mysql-ds0:
+    image: mysql:8.0
+    container_name: mysql-ds0
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: sandbox_demo_mysql
+    volumes:
+      - mysql_ds0_data:/var/lib/mysql
+      - ./init/ds0:/docker-entrypoint-initdb.d   # 初始化脚本
+    command: >
+      --server-id=100
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - "0101"
+
+  # ==================== 组0：从库 ds0slave0 ====================
+  mysql-ds0slave0:
+    image: mysql:8.0
+    container_name: mysql-ds0slave0
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: sandbox_demo_mysql
+    volumes:
+      - mysql_ds0slave0_data:/var/lib/mysql
+    command: >
+      --server-id=101
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --relay-log=relay-log
+      --read-only=ON
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - "0101"
+
+  # ==================== 组1：主库 ds1 ====================
+  mysql-ds1:
+    image: mysql:8.0
+    container_name: mysql-ds1
+    restart: unless-stopped
+    ports:
+      - "3309:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: sandbox_demo_mysql
+    volumes:
+      - mysql_ds1_data:/var/lib/mysql
+      - ./init/ds1:/docker-entrypoint-initdb.d
+    command: >
+      --server-id=200
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - "0101"
+
+  # ==================== 组1：从库 ds1slave0 ====================
+  mysql-ds1slave0:
+    image: mysql:8.0
+    container_name: mysql-ds1slave0
+    restart: unless-stopped
+    ports:
+      - "3310:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: sandbox_demo_mysql
+    volumes:
+      - mysql_ds1slave0_data:/var/lib/mysql
+    command: >
+      --server-id=201
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --relay-log=relay-log
+      --read-only=ON
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - "0101"
+
+networks:
+  "0101":
+    name: "0101"
+    driver: bridge
+
+volumes:
+  mysql_ds0_data:
+  mysql_ds0slave0_data:
+  mysql_ds1_data:
+  mysql_ds1slave0_data:
