@@ -5,10 +5,10 @@ import lombok.Data;
 /**
  * Druid 连接池基础配置属性
  * <p>
- * 封装连接池大小、超时、连接测试、泄漏检测等核心参数，所有数据源共享此配置。
- * 属性使用 String 类型便于从配置文件读取，使用时再进行类型转换。
+ * 封装连接池大小、超时、连接测试、泄漏检测等核心参数。
+ * 属性使用 String 类型便于从配置文件读取。
  * <p>
- * 注意：removeAbandoned 生产环境慎用，testOnBorrow/Return 会显著降低性能。
+ * 注意：testOnBorrow/Return 会显著降低性能，removeAbandoned 生产环境慎用。
  *
  * @author 0101
  * @since 2026-03-13
@@ -32,7 +32,7 @@ public class JdbcBasicProp {
     private String initialSize;
 
     /**
-     * 是否记录连接泄漏日志（需配合 removeAbandoned）
+     * 是否记录连接泄漏日志
      */
     private String logAbandoned;
 
@@ -47,7 +47,7 @@ public class JdbcBasicProp {
     private String removeAbandonedTimeout;
 
     /**
-     * 获取连接的最大等待时间（毫秒），-1 表示无限等待
+     * 获取连接的最大等待时间（毫秒）
      */
     private String maxWait;
 
@@ -57,7 +57,7 @@ public class JdbcBasicProp {
     private String timeBetweenEvictionRunsMillis;
 
     /**
-     * 每次检查的空闲连接数量，-1 表示全部
+     * 每次检查的空闲连接数，-1 表示全部
      */
     private String numTestsPerEvictionRun;
 
@@ -67,7 +67,7 @@ public class JdbcBasicProp {
     private String minEvictableIdleTimeMillis;
 
     /**
-     * 连接测试 SQL（如 SELECT 1）
+     * 连接测试 SQL
      */
     private String validationQuery;
 

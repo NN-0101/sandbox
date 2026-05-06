@@ -11,11 +11,14 @@ import java.util.Properties;
  * 分库算法
  * <p>
  * 根据分片键的值取模，路由到对应的数据源。
- * 分片键可以是数字（直接取模）或字符串（按 hashCode 取模）。
+ * 数字类型直接取模，字符串类型按 hashCode 取模。
  * <p>
- * 配置项：
+ * 配置项（通过 AlgorithmConfiguration 的 props 传入）：
  * - database-count：分库数量，默认 2
  * - datasource-prefix：数据源名称前缀，默认 "datasource"
+ *
+ * @author 0101
+ * @since 2026-05-06
  */
 public final class DatabaseShardingAlgorithm implements StandardShardingAlgorithm<Comparable<?>> {
 
@@ -26,12 +29,19 @@ public final class DatabaseShardingAlgorithm implements StandardShardingAlgorith
     private static final int DEFAULT_DATABASE_COUNT = 2;
     private static final String DEFAULT_DATASOURCE_PREFIX = "datasource";
 
+    /**
+     * 精确分片：根据分片键值计算目标数据源
+     *
+     * @param availableTargetNames 可用的数据源名称列表
+     * @param shardingValue        分片值，getValue() 即 SQL 中分片键的实际值，如 phone = '13800138000'
+     * @return 目标数据源名称，如 "datasource0"
+     */
     @Override
     public String doSharding(final Collection<String> availableTargetNames,
                              final PreciseShardingValue<Comparable<?>> shardingValue) {
         int databaseCount = getDatabaseCount();
         String datasourcePrefix = getDatasourcePrefix();
-        // shardingValue.getValue() 即 SQL 中分片键的实际值，如 phone = '13800138000'
+
         long hashValue = toLong(shardingValue.getValue());
         long index = hashValue % databaseCount;
         String target = datasourcePrefix + index;
@@ -42,6 +52,9 @@ public final class DatabaseShardingAlgorithm implements StandardShardingAlgorith
         throw new UnsupportedOperationException("Cannot find target: " + target + " in " + availableTargetNames);
     }
 
+    /**
+     * 范围分片：暂不支持精确路由，返回所有可用数据源
+     */
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames,
                                          final RangeShardingValue<Comparable<?>> shardingValue) {
@@ -55,6 +68,7 @@ public final class DatabaseShardingAlgorithm implements StandardShardingAlgorith
         if (value instanceof Number) {
             return ((Number) value).longValue();
         }
+        // & Integer.MAX_VALUE 确保正数，避免 Math.abs(Integer.MIN_VALUE) 溢出问题
         return value.hashCode() & Integer.MAX_VALUE;
     }
 

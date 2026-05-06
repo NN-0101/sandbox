@@ -8,15 +8,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
 /**
- * @description: 数据源构建工具
- * @author: 0101
- * @create: 2026/05/02
+ * Druid 数据源构建工具
+ *
+ * @author 0101
+ * @since 2026-05-02
  */
 @Slf4j
 public class DataSourceUtil {
 
     /**
      * 根据属性 Map 构建 Druid 数据源
+     *
+     * @param dsMap 数据源属性（url, username, password, driver）
+     * @return DruidDataSource 实例，失败返回 null
      */
     public static DataSource buildDataSource(Map<String, Object> dsMap) {
         try {

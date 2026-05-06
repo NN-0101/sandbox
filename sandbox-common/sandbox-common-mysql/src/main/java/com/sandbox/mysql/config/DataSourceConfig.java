@@ -18,7 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 数据源配置 - 两主两从 + 分库分表规则
+ * 数据源配置
+ * <p>
+ * 从 yml 读取多数据源、加密、分库分表规则配置。
+ * 默认两主两从架构，支持按需扩展。
  *
  * @author 0101
  * @since 2026-05-02
@@ -53,7 +56,7 @@ public class DataSourceConfig {
     private JdbcBasicProp basic;
 
     /**
-     * 分库分表规则
+     * 分库分表规则列表
      */
     private List<ShardingRuleItem> rules = new ArrayList<>();
 
@@ -84,6 +87,9 @@ public class DataSourceConfig {
         return createDataSource(ds1slave0, "ds1slave0");
     }
 
+    /**
+     * 创建 Druid 数据源并配置连接池参数
+     */
     private DataSource createDataSource(JdbcDsProp prop, String dsName) {
         long startTime = System.currentTimeMillis();
 
@@ -100,6 +106,7 @@ public class DataSourceConfig {
             throw new RuntimeException("创建数据源失败: " + dsName);
         }
 
+        // 连接池基础配置
         ds.setName(dsName);
         ds.setMaxActive(20);
         ds.setMinIdle(5);
@@ -116,7 +123,7 @@ public class DataSourceConfig {
         return ds;
     }
 
-    // ==================== 分片规则内部类 ====================
+    // ==================== 内部配置类 ====================
 
     /**
      * 单条分库分表规则
@@ -140,6 +147,8 @@ public class DataSourceConfig {
 
     /**
      * 单个分片项（库或表）
+     * <p>
+     * count=1 且 shardingColumn 为空时表示不分片
      */
     @Getter
     @Setter
@@ -153,7 +162,7 @@ public class DataSourceConfig {
          */
         private String algorithmType = "";
         /**
-         * 分片数量
+         * 分片数量（1 表示不分片）
          */
         private int count;
     }

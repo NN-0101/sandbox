@@ -13,7 +13,13 @@ import org.springframework.context.annotation.Configuration;
 import java.util.*;
 
 /**
- * 字段加密配置（5.5.1 新版 API）
+ * 字段加密配置
+ * <p>
+ * 从 yml 读取需要加密的表和字段，自动生成 ShardingSphere 加密规则。
+ * 使用自定义 AES 算法，支持加解密和等值查询。
+ *
+ * @author 0101
+ * @since 2026-05-06
  */
 @Configuration
 public class EncryptConfig {
@@ -25,21 +31,23 @@ public class EncryptConfig {
     private DataSourceConfig dataSourceConfig;
 
     /**
-     * 加密规则：遍历 yml 中配置的表和字段，为每个字段生成加密规则
+     * 构建加密规则配置
+     * <p>
+     * 遍历 yml 中配置的表和字段，为每个字段生成密文列规则，
+     * 未配置加密时返回空表规则。
      */
     @Bean
     public EncryptRuleConfiguration encryptRuleConfiguration() {
-        // 加密算法配置
+        // 注册加密算法
         Properties algoProps = new Properties();
         algoProps.setProperty("aes-key-value", aesKey);
 
         Map<String, AlgorithmConfiguration> encryptors = new HashMap<>();
         encryptors.put("custom_aes", new AlgorithmConfiguration("CUSTOM_AES", algoProps));
 
-        // 获取加密配置
+        // 获取 yml 中的加密表配置
         DataSourceConfig.EncryptConfigItem encryptConfig = dataSourceConfig.getEncrypt();
         if (encryptConfig == null || encryptConfig.getTables() == null || encryptConfig.getTables().isEmpty()) {
-            // 没有配置加密，返回空规则
             return new EncryptRuleConfiguration(Collections.emptyList(), encryptors);
         }
 
@@ -49,17 +57,13 @@ public class EncryptConfig {
             List<EncryptColumnRuleConfiguration> columns = new ArrayList<>();
 
             for (String columnName : tableItem.getColumns()) {
-                // 每个字段生成一个密文列配置
+                // 每个字段绑定 custom_aes 加密器
                 EncryptColumnItemRuleConfiguration cipherItem = new EncryptColumnItemRuleConfiguration(columnName, "custom_aes");
-
                 EncryptColumnRuleConfiguration columnConfig = new EncryptColumnRuleConfiguration(columnName, cipherItem);
-
                 columns.add(columnConfig);
             }
 
-            EncryptTableRuleConfiguration tableConfig = new EncryptTableRuleConfiguration(tableItem.getTableName(), columns);
-
-            tables.add(tableConfig);
+            tables.add(new EncryptTableRuleConfiguration(tableItem.getTableName(), columns));
         }
 
         return new EncryptRuleConfiguration(tables, encryptors);

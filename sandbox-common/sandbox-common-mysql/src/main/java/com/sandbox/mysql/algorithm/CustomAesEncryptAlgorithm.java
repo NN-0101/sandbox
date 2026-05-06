@@ -13,6 +13,14 @@ import java.util.Properties;
 
 /**
  * ShardingSphere 5.5.1 自定义 AES 加密算法
+ * <p>
+ * 实现数据库字段级别的 AES 加解密，支持等值查询。
+ * 采用 MySQL 兼容的 AES 密钥生成方式。
+ * <p>
+ * 配置项：aes-key-value - AES 密钥（必填）
+ *
+ * @author 0101
+ * @since 2026-05-06
  */
 public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
 
@@ -23,6 +31,9 @@ public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
         this.props = props;
     }
 
+    /**
+     * 加密：明文 → 十六进制密文
+     */
     @Override
     public String encrypt(final Object plaintext, final AlgorithmSQLContext context) {
         if (null == plaintext) {
@@ -37,6 +48,9 @@ public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
         }
     }
 
+    /**
+     * 解密：十六进制密文 → 明文
+     */
     @Override
     public Object decrypt(final Object ciphertext, final AlgorithmSQLContext context) {
         if (null == ciphertext) {
@@ -52,25 +66,21 @@ public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
     }
 
     /**
-     * 加密算法元数据
+     * 算法元数据：支持解密、等值查询，不支持模糊查询
      */
     @Override
     public EncryptAlgorithmMetaData getMetaData() {
-        return new EncryptAlgorithmMetaData(
-                true,   // supportDecrypt：支持解密
-                true,   // supportEquivalentFilter：支持等值查询
-                false   // supportLike：不支持模糊查询
-        );
+        return new EncryptAlgorithmMetaData(true, true, false);
     }
 
-    /**
-     * 返回算法配置
-     */
     @Override
     public AlgorithmConfiguration toConfiguration() {
         return new AlgorithmConfiguration(getType(), props);
     }
 
+    /**
+     * 获取 AES Cipher
+     */
     private Cipher getCipher(final int mode) throws Exception {
         String key = props.getProperty("aes-key-value");
         if (key == null) {
@@ -82,6 +92,9 @@ public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
         return cipher;
     }
 
+    /**
+     * MySQL 兼容的 AES 密钥生成：对原始 key 做异或折叠到 16 字节
+     */
     private SecretKeySpec generateMysqlAesKey(final String key) {
         byte[] finalKey = new byte[16];
         byte[] keyBytes = key.getBytes(StandardCharsets.US_ASCII);
