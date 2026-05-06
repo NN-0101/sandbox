@@ -18,5 +18,6 @@
 
     <modules>
         <module>sandbox-demo-mysql</module>
+        <module>sandbox-demo-postgresql</module>
     </modules>
 </project>

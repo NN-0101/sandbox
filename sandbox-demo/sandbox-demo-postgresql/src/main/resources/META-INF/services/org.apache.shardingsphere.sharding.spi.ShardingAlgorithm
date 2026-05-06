@@ -1,0 +1,2 @@
+com.sandbox.postgresql.algorithm.DatabaseShardingAlgorithm
+com.sandbox.postgresql.algorithm.TableShardingAlgorithm
