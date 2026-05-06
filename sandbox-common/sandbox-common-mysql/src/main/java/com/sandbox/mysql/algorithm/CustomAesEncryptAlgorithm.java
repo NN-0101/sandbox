@@ -106,6 +106,6 @@ public final class CustomAesEncryptAlgorithm implements EncryptAlgorithm {
 
     @Override
     public String getType() {
-        return "CUSTOM_AES";
+        return "mysql";
     }
 }

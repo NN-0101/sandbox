@@ -92,6 +92,6 @@ public final class PostgresAesEncryptAlgorithm implements EncryptAlgorithm {
 
     @Override
     public String getType() {
-        return "POSTGRES_AES";
+        return "postgresql";
     }
 }

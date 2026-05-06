@@ -40,7 +40,7 @@ public class PostgresEncryptConfig {
         algoProps.setProperty("aes-key-value", aesKey);
 
         Map<String, AlgorithmConfiguration> encryptors = new HashMap<>();
-        encryptors.put("postgres_aes", new AlgorithmConfiguration("POSTGRES_AES", algoProps));
+        encryptors.put("custom_aes", new AlgorithmConfiguration("postgresql", algoProps));
 
         // 获取 yml 中的加密表配置
         PostgresDataSourceConfig.EncryptConfigItem encryptConfig = dataSourceConfig.getEncrypt();
@@ -54,10 +54,8 @@ public class PostgresEncryptConfig {
             List<EncryptColumnRuleConfiguration> columns = new ArrayList<>();
 
             for (String columnName : tableItem.getColumns()) {
-                EncryptColumnItemRuleConfiguration cipherItem =
-                        new EncryptColumnItemRuleConfiguration(columnName, "postgres_aes");
-                EncryptColumnRuleConfiguration columnConfig =
-                        new EncryptColumnRuleConfiguration(columnName, cipherItem);
+                EncryptColumnItemRuleConfiguration cipherItem = new EncryptColumnItemRuleConfiguration(columnName, "custom_aes");
+                EncryptColumnRuleConfiguration columnConfig = new EncryptColumnRuleConfiguration(columnName, cipherItem);
                 columns.add(columnConfig);
             }
 

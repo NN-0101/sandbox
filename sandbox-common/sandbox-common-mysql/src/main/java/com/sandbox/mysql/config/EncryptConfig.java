@@ -43,7 +43,7 @@ public class EncryptConfig {
         algoProps.setProperty("aes-key-value", aesKey);
 
         Map<String, AlgorithmConfiguration> encryptors = new HashMap<>();
-        encryptors.put("custom_aes", new AlgorithmConfiguration("CUSTOM_AES", algoProps));
+        encryptors.put("custom_aes", new AlgorithmConfiguration("mysql", algoProps));
 
         // 获取 yml 中的加密表配置
         DataSourceConfig.EncryptConfigItem encryptConfig = dataSourceConfig.getEncrypt();
