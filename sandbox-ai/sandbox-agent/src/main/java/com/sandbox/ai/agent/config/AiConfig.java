@@ -8,7 +8,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,8 +58,7 @@ public class AiConfig {
                 strategy -> strategy.getClass().getAnnotation(AiChatService.class).value(),
                 Function.identity(),
                 (existing, replacement) -> {
-                    throw new IllegalStateException("发现重复策略: " + existing.getClass().getName()
-                            + " 和 " + replacement.getClass().getName());
+                    throw new IllegalStateException("发现重复策略: " + existing.getClass().getName() + " 和 " + replacement.getClass().getName());
                 }
         ));
     }
