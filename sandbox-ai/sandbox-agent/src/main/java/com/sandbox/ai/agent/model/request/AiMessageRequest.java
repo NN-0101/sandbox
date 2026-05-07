@@ -1,6 +1,6 @@
 package com.sandbox.ai.agent.model.request;
 
-import com.sandbox.ai.agent.enumeration.AgentTypeTypeEnum;
+import com.sandbox.ai.agent.enumeration.AgentTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +21,7 @@ public class AiMessageRequest {
     /**
      * 聊天业务类型
      */
-    private AgentTypeTypeEnum chatType;
+    private AgentTypeEnum chatType;
 
     /**
      * 身份类型（如：USER、DEVICE、ADMIN等）
@@ -46,7 +46,7 @@ public class AiMessageRequest {
     /**
      * 创建请求的静态工厂方法
      */
-    public static AiMessageRequest of(AgentTypeTypeEnum chatType, String message) {
+    public static AiMessageRequest of(AgentTypeEnum chatType, String message) {
         return AiMessageRequest.builder()
                 .chatType(chatType)
                 .message(message)
@@ -56,7 +56,7 @@ public class AiMessageRequest {
     /**
      * 创建带会话的请求
      */
-    public static AiMessageRequest of(AgentTypeTypeEnum chatType, String conversationId, String message) {
+    public static AiMessageRequest of(AgentTypeEnum chatType, String conversationId, String message) {
         return AiMessageRequest.builder()
                 .chatType(chatType)
                 .conversationId(conversationId)

@@ -1,6 +1,6 @@
 package com.sandbox.ai.agent;
 
-import com.sandbox.ai.agent.enumeration.AgentTypeTypeEnum;
+import com.sandbox.ai.agent.enumeration.AgentTypeEnum;
 import com.sandbox.ai.agent.facade.AiAgentDispatcher;
 import com.sandbox.ai.agent.model.request.AiMessageRequest;
 import com.sandbox.ai.agent.model.response.AiMessageResponse;
@@ -40,7 +40,7 @@ public class ChatMessageTest {
      */
     private AiMessageRequest createRequest(String message) {
         return AiMessageRequest.builder()
-                .chatType(AgentTypeTypeEnum.USER_TALK)
+                .chatType(AgentTypeEnum.USER_TALK)
                 .identityType(TEST_IDENTITY_TYPE)
                 .identifier(TEST_USER_ID)
                 .message(message)
@@ -52,7 +52,7 @@ public class ChatMessageTest {
      */
     private AiMessageRequest createRequest(String conversationId, String message) {
         return AiMessageRequest.builder()
-                .chatType(AgentTypeTypeEnum.USER_TALK)
+                .chatType(AgentTypeEnum.USER_TALK)
                 .identityType(TEST_IDENTITY_TYPE)
                 .identifier(TEST_USER_ID)
                 .conversationId(conversationId)
@@ -74,7 +74,7 @@ public class ChatMessageTest {
     void test01_basicConversation() {
         log.info("========== 测试1：基本对话开始 ==========");
 
-        AiMessageRequest request = createRequest("你好，你有那些工具使用");
+        AiMessageRequest request = createRequest("杭州今天天气怎么样");
         AiMessageResponse response = sendAndWait(request);
 
         Assertions.assertNotNull(response, "响应不应为空");
@@ -196,7 +196,7 @@ public class ChatMessageTest {
 
         // 测试空消息
         AiMessageRequest emptyMessageRequest = AiMessageRequest.builder()
-                .chatType(AgentTypeTypeEnum.USER_TALK)
+                .chatType(AgentTypeEnum.USER_TALK)
                 .message("")
                 .build();
 
@@ -206,7 +206,7 @@ public class ChatMessageTest {
 
         // 测试空白消息
         AiMessageRequest blankMessageRequest = AiMessageRequest.builder()
-                .chatType(AgentTypeTypeEnum.USER_TALK)
+                .chatType(AgentTypeEnum.USER_TALK)
                 .message("   ")
                 .build();
 
@@ -216,7 +216,7 @@ public class ChatMessageTest {
 
         // 测试null消息
         AiMessageRequest nullMessageRequest = AiMessageRequest.builder()
-                .chatType(AgentTypeTypeEnum.USER_TALK)
+                .chatType(AgentTypeEnum.USER_TALK)
                 .message(null)
                 .build();
 

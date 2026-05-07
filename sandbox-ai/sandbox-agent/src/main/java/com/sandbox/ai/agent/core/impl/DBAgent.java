@@ -6,41 +6,30 @@ import com.sandbox.ai.agent.enumeration.AgentTypeEnum;
 import com.sandbox.ai.agent.tool.DBTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 /**
- * 对话 Agent
- * <p>
- * 通用对话智能体，具备基础对话和工具调用能力。
- * Tools: DBTool, WeatherTool (via MCP)
- *
- * @author 0101
- * @since 2026/03/18
+ * @description:
+ * @author: 0101
+ * @create: 2026/05/07
  */
 @Slf4j
 @Component
-@AiAgentType(AgentTypeEnum.USER_TALK)
-public class ChatAgent implements AiAgent {
+@AiAgentType(AgentTypeEnum.DB)
+public class DBAgent implements AiAgent {
 
     @Autowired
     private ChatClient chatClient;
 
-    @Autowired
-    private ToolCallbackProvider toolCallbackProvider;
-
     @Override
     public Flux<String> execute(String prompt, String conversationId, String message) {
-        log.info("ChatAgent [{}] 开始处理用户消息", conversationId);
-
         return chatClient
                 .prompt(prompt)
                 .user(message)
                 .advisors(a -> a.param("chat_memory_conversation_id", conversationId))
                 .tools(new DBTool())
-                .toolCallbacks(toolCallbackProvider)
                 .stream()
                 .content()
                 .doOnNext(chunk -> log.trace("ChatAgent [{}] 生成片段: {}", conversationId, chunk))
