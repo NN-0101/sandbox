@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author: 0101
  * @create: 2026/05/07
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.sandbox.**"})
 public class AgentApplication {
 
     public static void main(String[] args) {

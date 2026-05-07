@@ -13,7 +13,7 @@ import org.springframework.ai.tool.annotation.Tool;
  * @since 2026/03/18
  */
 @Slf4j
-public class DBTools {
+public class DBTool {
 
     @Tool(description = "执行SQL查询并返回结果，仅支持SELECT查询")
     public String queryDatabase(String sql) {

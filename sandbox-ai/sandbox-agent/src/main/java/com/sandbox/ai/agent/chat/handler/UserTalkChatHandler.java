@@ -3,9 +3,10 @@ package com.sandbox.ai.agent.chat.handler;
 import com.sandbox.ai.agent.chat.BaseChatMessage;
 import com.sandbox.ai.agent.chat.annotations.AiChatService;
 import com.sandbox.ai.agent.enumeration.AiChatBizTypeEnum;
-import com.sandbox.ai.agent.tool.DBTools;
+import com.sandbox.ai.agent.tool.DBTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -26,13 +27,17 @@ public class UserTalkChatHandler implements BaseChatMessage {
     @Autowired
     private ChatClient chatClient;
 
+    @Autowired
+    private ToolCallbackProvider toolCallbackProvider;
+
     @Override
     public Flux<String> sendMessage(String prompt, String conversationId, String message) {
         return chatClient
                 .prompt(prompt)
                 .user(message)
                 .advisors(a -> a.param("chat_memory_conversation_id", conversationId))
-                .tools(new DBTools())
+                .tools(new DBTool())
+                .toolCallbacks(toolCallbackProvider)
                 .stream()
                 .content()
                 .doOnNext(chunk -> log.trace("会话 [{}] 生成片段: {}", conversationId, chunk))

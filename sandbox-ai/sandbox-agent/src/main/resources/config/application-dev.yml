@@ -42,6 +42,17 @@ spring:
         base-url: https://api.siliconflow.cn  # 注意路径必须是完整端点
         options:
           model: netease-youdao/bce-embedding-base_v1
+    mcp:
+      client:
+        enabled: true
+        name: sandbox-mcp-client
+        version: 1.0.0
+        request-timeout: 30s
+        type: sync
+        sse:
+          connections:
+            server1:
+              url: http://localhost:1012
 
 # 日志打印级别
 logging:

@@ -1,14 +1,10 @@
 server:
-  port: 1011
+  port: 1012
   servlet:
     encoding:
       charset: UTF-8
       force: true
       enabled: true
-    context-path: /sandbox-agent
-  error:
-    whitelabel:
-      enabled: false # 禁用默认错误页面
 
 spring:
   main:
@@ -17,4 +13,12 @@ spring:
     resources:
       add-mappings: false # 禁用默认的静态资源映射
   application:
-    name: sandbox-agent
+    name: sandbox-mcp-server
+
+  ai:
+    mcp:
+      server:
+        name: sandbox-mcp-server
+        version: 1.0.0
+        type: sync
+        sse-message-endpoint: /mcp/message
