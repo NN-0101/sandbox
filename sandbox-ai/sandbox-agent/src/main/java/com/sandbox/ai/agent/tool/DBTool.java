@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 
 /**
- * 数据库查询工具
+ * 数据库查询工具 本地工具调用
  * <p>
  * 通过 @Tool 注解暴露给 AI 模型，使模型能够生成并执行 SELECT 查询。
  * 仅支持 SELECT，不允许更新或修改操作。

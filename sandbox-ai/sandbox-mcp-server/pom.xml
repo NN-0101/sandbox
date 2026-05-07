@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>sandbox-mcp-server</artifactId>
-    <version>1.0.0</version>
+    <version>${revision}</version>
     <name>sandbox-mcp-server</name>
     <description>sandbox-mcp-server</description>
 

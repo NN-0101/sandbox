@@ -1,11 +1,7 @@
-package com.sandbox.mcp.server;
+package com.sandbox.ai.mcp.server;
 
-import com.sandbox.mcp.server.tool.WeatherTool;
-import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
 /**
  * @description:
