@@ -53,4 +53,4 @@ logging:
 
 business-config:
   prompts:
-    user_talk: "你是一个友好的AI助手，请用中文回答用户的问题"
+    user-talk: "你是一个友好的AI助手，请用中文回答用户的问题"

@@ -74,7 +74,7 @@ public class ChatMessageTest {
     void test01_basicConversation() {
         log.info("========== 测试1：基本对话开始 ==========");
 
-        AiMessageRequest request = createRequest("你好，请用一句话介绍你自己");
+        AiMessageRequest request = createRequest("你好，你有那些工具使用");
         AiMessageResponse response = sendAndWait(request);
 
         Assertions.assertNotNull(response, "响应不应为空");
