@@ -70,14 +70,18 @@ public class ChatAgent implements AiAgent {
                 .doOnComplete(() -> log.info("ChatAgent [{}] 完成", conversationId));
     }
 
-    /** 合并所有 Skill 的系统提示词 */
+    /**
+     * 合并所有 Skill 的系统提示词
+     */
     private String mergePrompts() {
         return Stream.of(chatSkill, dbSkill)
                 .map(Skill::getPrompt)
                 .collect(Collectors.joining("\n"));
     }
 
-    /** 收集所有 Skill 的本地工具 */
+    /**
+     * 收集所有 Skill 的本地工具
+     */
     private Object[] collectTools() {
         return Stream.of(chatSkill, dbSkill)
                 .flatMap(s -> s.getTools().stream())
