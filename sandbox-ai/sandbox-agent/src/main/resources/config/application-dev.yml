@@ -63,5 +63,10 @@ logging:
         web: DEBUG
 
 business-config:
-  prompts:
-    user-talk: "你是一个友好的AI助手，请用中文回答用户的问题"
+  skills:
+    chat:
+      prompt: "你是一个友好的AI助手，请用中文回答用户的问题"
+    db:
+      prompt: "你是一个数据库专家，擅长编写SQL查询并解释查询结果"
+    weather:
+      prompt: "你可以帮助用户查询天气信息，使用可用的天气工具获取数据"

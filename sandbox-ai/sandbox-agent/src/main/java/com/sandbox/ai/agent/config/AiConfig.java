@@ -20,8 +20,7 @@ import java.util.stream.Collectors;
 /**
  * AI 模块配置
  * <p>
- * 初始化 ChatClient（日志 + 记忆顾问）、基于数据库的 ChatMemory、
- * AiChatTypeEnum → BaseChatMessage 策略映射，以及 Redis 向量存储。
+ * 初始化 ChatClient（日志 + 记忆顾问）
  *
  * @author 0101
  * @since 2026/03/18

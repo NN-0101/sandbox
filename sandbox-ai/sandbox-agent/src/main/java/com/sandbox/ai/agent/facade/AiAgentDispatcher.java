@@ -1,6 +1,5 @@
 package com.sandbox.ai.agent.facade;
 
-import com.sandbox.ai.agent.config.BusinessConfig;
 import com.sandbox.ai.agent.core.AiAgent;
 import com.sandbox.ai.agent.enumeration.AgentTypeEnum;
 import com.sandbox.ai.agent.model.request.AiMessageRequest;
@@ -20,7 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * AI Agent 调度门面
  * <p>
- * 根据业务类型统一调度不同的 Agent 实现，会话管理依赖 ChatMemory。
+ * 根据业务类型统一调度不同的 Agent 实现。
+ * Agent 自身通过组合 Skill 管理提示词和工具，调度器不再负责 prompt 注入。
+ * </p>
  *
  * @author 0101
  * @since 2026/04/30
@@ -31,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AiAgentDispatcher {
 
     private final Map<AgentTypeEnum, AiAgent> agentStrategyMap;
-    private final BusinessConfig businessConfig;
 
     /** 发送流式消息 */
     public Flux<String> sendMessageStream(AiMessageRequest request) {
@@ -39,14 +39,13 @@ public class AiAgentDispatcher {
 
         AiAgent handler = getHandler(request.getChatType());
         String conversationId = resolveConversationId(request);
-        String promptTemplate = businessConfig.getPrompts().get(request.getChatType().getValue());
 
         log.info("业务 [{}] 调用 [{}] 处理会话 [{}]",
                 request.getChatType().getValue(),
                 request.getChatType().getDescription(),
                 conversationId);
 
-        return handler.execute(promptTemplate, conversationId, request.getMessage())
+        return handler.execute(conversationId, request.getMessage())
                 .doOnComplete(() -> log.info("会话 [{}] 对话完成", conversationId))
                 .doOnError(error -> log.error("会话 [{}] 对话异常", conversationId, error));
     }
