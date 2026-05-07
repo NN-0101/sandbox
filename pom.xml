@@ -14,6 +14,7 @@
         <module>sandbox-common</module>
         <module>sandbox-demo</module>
         <module>sandbox-home</module>
+        <module>sandbox-ai</module>
     </modules>
 
     <parent>

@@ -1,0 +1,30 @@
+spring:
+  config:
+    activate:
+      # 指定当前生效的配置文件
+      on-profile: test
+    #显式导入外部配置 Nacos
+    import:
+      - optional:nacos:${spring.application.name}-${spring.config.activate.on-profile}.${spring.cloud.nacos.config.file-extension}
+
+  cloud:
+    nacos:
+      config:
+        # Nacos 服务器地址
+        server-addr: localhost:8848
+        # 命名空间 ID（可选）
+        namespace: 276b89aa-db62-47ef-b05a-6f14fdd23da2
+        # 配置分组（默认 DEFAULT_GROUP）
+        group: DEFAULT_GROUP
+        # 配置格式（yaml 或 properties）
+        file-extension: yaml
+        # 启用动态刷新
+        refresh-enabled: true
+        username: nacos
+        password: nacos
+
+      discovery:
+        server-addr: localhost:8848
+        namespace: 276b89aa-db62-47ef-b05a-6f14fdd23da2
+        username: nacos
+        password: nacos
