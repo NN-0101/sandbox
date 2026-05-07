@@ -12,7 +12,7 @@ import java.util.NoSuchElementException;
  * @since 2026/03/18
  */
 @Getter
-public enum AiChatBizTypeEnum {
+public enum AgentTypeTypeEnum {
 
     USER_TALK("user-talk", "用户聊天"),
 
@@ -21,7 +21,7 @@ public enum AiChatBizTypeEnum {
     private final String value;
     private final String description;
 
-    AiChatBizTypeEnum(String value, String description) {
+    AgentTypeTypeEnum(String value, String description) {
         this.value = value;
         this.description = description;
     }
@@ -33,14 +33,14 @@ public enum AiChatBizTypeEnum {
         return Arrays.stream(values())
                 .filter(x -> x.getValue().equals(value))
                 .findFirst()
-                .map(AiChatBizTypeEnum::getDescription)
+                .map(AgentTypeTypeEnum::getDescription)
                 .orElseThrow(() -> new NoSuchElementException("没有相关业务！"));
     }
 
     /**
      * 根据值获取枚举对象，找不到抛出 NoSuchElementException
      */
-    public static AiChatBizTypeEnum getAiTypeEnum(String value) {
+    public static AgentTypeTypeEnum getAiTypeEnum(String value) {
         return Arrays.stream(values())
                 .filter(x -> x.getValue().equals(value))
                 .findFirst()

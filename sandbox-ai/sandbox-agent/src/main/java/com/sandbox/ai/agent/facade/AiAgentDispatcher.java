@@ -1,8 +1,8 @@
 package com.sandbox.ai.agent.facade;
 
-import com.sandbox.ai.agent.chat.BaseChatMessage;
 import com.sandbox.ai.agent.config.BusinessConfig;
-import com.sandbox.ai.agent.enumeration.AiChatBizTypeEnum;
+import com.sandbox.ai.agent.core.AiAgent;
+import com.sandbox.ai.agent.enumeration.AgentTypeTypeEnum;
 import com.sandbox.ai.agent.model.request.AiMessageRequest;
 import com.sandbox.ai.agent.model.response.AiMessageResponse;
 import com.sandbox.ai.agent.model.response.AiStreamChunk;
@@ -30,9 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AiChatFacade {
+public class AiAgentDispatcher {
 
-    private final Map<AiChatBizTypeEnum, BaseChatMessage> chatMessageStrategyMap;
+    private final Map<AgentTypeTypeEnum, AiAgent> chatMessageStrategyMap;
     private final BusinessConfig businessConfig;
 
     /**
@@ -46,7 +46,7 @@ public class AiChatFacade {
         request.validate();
 
         // 获取对应的处理器
-        BaseChatMessage handler = getHandler(request.getChatType());
+        AiAgent handler = getHandler(request.getChatType());
 
         // 处理会话ID（如果没有则生成新的）
         String conversationId = resolveConversationId(request);
@@ -60,7 +60,7 @@ public class AiChatFacade {
                 conversationId,
                 request.getMessage());
 
-        return handler.sendMessage(promptTemplate, conversationId, request.getMessage())
+        return handler.execute(promptTemplate, conversationId, request.getMessage())
                 .doOnComplete(() -> log.info("会话 [{}] 对话完成", conversationId))
                 .doOnError(error -> log.error("会话 [{}] 对话异常", conversationId, error));
     }
@@ -143,8 +143,8 @@ public class AiChatFacade {
     /**
      * 获取对应的处理器
      */
-    private BaseChatMessage getHandler(AiChatBizTypeEnum chatType) {
-        BaseChatMessage handler = chatMessageStrategyMap.get(chatType);
+    private AiAgent getHandler(AgentTypeTypeEnum chatType) {
+        AiAgent handler = chatMessageStrategyMap.get(chatType);
         if (handler == null) {
             log.error("未找到聊天类型 [{}] 对应的处理策略", chatType);
             throw new RuntimeException("AI聊天类型不支持: " + chatType);
@@ -155,14 +155,14 @@ public class AiChatFacade {
     /**
      * 检查是否支持指定的聊天类型
      */
-    public boolean supports(AiChatBizTypeEnum chatType) {
+    public boolean supports(AgentTypeTypeEnum chatType) {
         return chatMessageStrategyMap.containsKey(chatType);
     }
 
     /**
      * 获取所有支持的聊天类型
      */
-    public AiChatBizTypeEnum[] getSupportedChatTypes() {
-        return chatMessageStrategyMap.keySet().toArray(new AiChatBizTypeEnum[0]);
+    public AgentTypeTypeEnum[] getSupportedChatTypes() {
+        return chatMessageStrategyMap.keySet().toArray(new AgentTypeTypeEnum[0]);
     }
 }

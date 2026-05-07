@@ -1,6 +1,6 @@
-package com.sandbox.ai.agent.chat.annotations;
+package com.sandbox.ai.agent.annotations;
 
-import com.sandbox.ai.agent.enumeration.AiChatBizTypeEnum;
+import com.sandbox.ai.agent.enumeration.AgentTypeTypeEnum;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.lang.annotation.ElementType;
@@ -20,7 +20,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Qualifier
-public @interface AiChatService {
+public @interface AiAgentType {
 
-    AiChatBizTypeEnum value();
+    /**
+     * Agent 的业务类型
+     */
+    AgentTypeTypeEnum value();
+
+    /**
+     * Agent 的描述信息（可选）
+     */
+    String description() default "";
+
 }

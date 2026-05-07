@@ -1,8 +1,8 @@
 package com.sandbox.ai.agent.config;
 
-import com.sandbox.ai.agent.chat.BaseChatMessage;
-import com.sandbox.ai.agent.chat.annotations.AiChatService;
-import com.sandbox.ai.agent.enumeration.AiChatBizTypeEnum;
+import com.sandbox.ai.agent.annotations.AiAgentType;
+import com.sandbox.ai.agent.core.AiAgent;
+import com.sandbox.ai.agent.enumeration.AgentTypeTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -53,9 +53,9 @@ public class AiConfig {
      * 构建 AI 服务策略映射，根据 @AiChatService 注解区分类型，重复类型抛出异常
      */
     @Bean
-    public Map<AiChatBizTypeEnum, BaseChatMessage> chatMessageStrategyMap(List<BaseChatMessage> strategies) {
+    public Map<AgentTypeTypeEnum, AiAgent> chatMessageStrategyMap(List<AiAgent> strategies) {
         return strategies.stream().collect(Collectors.toMap(
-                strategy -> strategy.getClass().getAnnotation(AiChatService.class).value(),
+                strategy -> strategy.getClass().getAnnotation(AiAgentType.class).value(),
                 Function.identity(),
                 (existing, replacement) -> {
                     throw new IllegalStateException("发现重复策略: " + existing.getClass().getName() + " 和 " + replacement.getClass().getName());
