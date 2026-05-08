@@ -33,7 +33,9 @@ public class AiAgentDispatcher {
 
     private final Map<AgentTypeEnum, AiAgent> agentStrategyMap;
 
-    /** 发送流式消息 */
+    /**
+     * 发送流式消息
+     */
     public Flux<String> sendMessageStream(AiMessageRequest request) {
         request.validate();
 
@@ -50,7 +52,9 @@ public class AiAgentDispatcher {
                 .doOnError(error -> log.error("会话 [{}] 对话异常", conversationId, error));
     }
 
-    /** 发送消息并收集完整响应（非流式） */
+    /**
+     * 发送消息并收集完整响应（非流式）
+     */
     public Mono<AiMessageResponse> sendMessage(AiMessageRequest request) {
         return sendMessageStream(request)
                 .collectList()
@@ -61,7 +65,9 @@ public class AiAgentDispatcher {
                 .onErrorResume(error -> Mono.just(AiMessageResponse.error(error.getMessage())));
     }
 
-    /** 发送流式消息（带元数据） */
+    /**
+     * 发送流式消息（带元数据）
+     */
     public Flux<AiStreamChunk> sendMessageStreamWithMetadata(AiMessageRequest request) {
         String conversationId = resolveConversationId(request);
         request.setConversationId(conversationId);
@@ -82,7 +88,9 @@ public class AiAgentDispatcher {
                         .build());
     }
 
-    /** 解析会话ID，不存在则生成新的 */
+    /**
+     * 解析会话ID，不存在则生成新的
+     */
     protected String resolveConversationId(AiMessageRequest request) {
         String conversationId = request.getConversationId();
 
@@ -94,7 +102,9 @@ public class AiAgentDispatcher {
         return conversationId;
     }
 
-    /** 获取对应的 Agent 处理器 */
+    /**
+     * 获取对应的 Agent 处理器
+     */
     private AiAgent getHandler(AgentTypeEnum chatType) {
         AiAgent handler = agentStrategyMap.get(chatType);
         if (handler == null) {
@@ -103,12 +113,16 @@ public class AiAgentDispatcher {
         return handler;
     }
 
-    /** 是否支持指定聊天类型 */
+    /**
+     * 是否支持指定聊天类型
+     */
     public boolean supports(AgentTypeEnum chatType) {
         return agentStrategyMap.containsKey(chatType);
     }
 
-    /** 获取所有支持的聊天类型 */
+    /**
+     * 获取所有支持的聊天类型
+     */
     public AgentTypeEnum[] getSupportedChatTypes() {
         return agentStrategyMap.keySet().toArray(new AgentTypeEnum[0]);
     }
