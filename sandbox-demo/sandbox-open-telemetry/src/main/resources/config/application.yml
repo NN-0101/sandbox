@@ -1,0 +1,19 @@
+server:
+  port: 1001
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+  error:
+    whitelabel:
+      enabled: false # 禁用默认错误页面
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  web:
+    resources:
+      add-mappings: false # 禁用默认的静态资源映射
+  application:
+    name: sandbox-open-telemetry

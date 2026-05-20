@@ -1,0 +1,29 @@
+spring:
+  # Kafka 配置
+  kafka:
+    # Kafka 服务器地址（本地 Docker 环境）
+    bootstrap-servers: localhost:9092
+    # 生产者配置
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 可选：设置 acks 模式
+      properties:
+        acks: all
+        retries: 3
+    # 消费者配置
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 消费组 ID
+      group-id: sandbox-open-telemetry-group
+      # 从头开始消费（如果没有 offset）
+      auto-offset-reset: earliest
+      # 手动提交 offset
+      enable-auto-commit: true
+    # 监听器配置
+    listener:
+      # 手动提交模式
+      ack-mode: record
+      # 并发数
+      concurrency: 3

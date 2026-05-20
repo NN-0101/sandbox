@@ -19,5 +19,6 @@
     <modules>
         <module>sandbox-demo-mysql</module>
         <module>sandbox-demo-postgresql</module>
+        <module>sandbox-open-telemetry</module>
     </modules>
 </project>

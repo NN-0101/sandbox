@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>logback</contextName>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- 应用信息配置 -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="sandbox-open-telemetry"/>
+    <!-- 注意：com.sandbox.demo.opentelemetry.log 这个类需要存在，否则会报错 -->
+    <define name="LOG_HOME" class="com.sandbox.demo.opentelemetry.log.LogPathProperty"/>
+
+    <!-- 日志配置属性 -->
+    <property name="ROOT_LEVEL" value="INFO"/>
+    <property name="MAX_FILE_SIZE" value="100MB"/>
+    <property name="MAX_HISTORY" value="7"/>
+    <property name="CLEAN_HISTORY_ON_START" value="true"/>
+    <property name="CHARSET" value="UTF-8"/>
+    <property name="LOG_BASE_PATH" value="/apprun/logs/${APP_NAME}"/>
+
+    <!-- ========== 关键修改点1：日志格式，将 [%X{tlogTraceId}] 改为 OpenTelemetry 的 trace_id ========== -->
+    <!-- %X{trace_id} 是 OpenTelemetry Agent 自动注入到 MDC 的 key -->
+    <!-- %X{trace_id:-} 中的 :- 表示当 trace_id 为空时输出空字符串，避免输出 "null" -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(%-5level) - [%X{trace_id:-}] - [%thread] %cyan(%logger{36}) : %msg%n"/>
+
+    <!-- 控制台Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 关键修改点2：移除 TLog 特有的 encoder，使用标准 PatternLayoutEncoder -->
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+    </appender>
+
+    <!-- 普通日志文件 -->
+    <appender name="DEFAULT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <file>${LOG_BASE_PATH}/default.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_BASE_PATH}/default.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
+            <cleanHistoryOnStart>${CLEAN_HISTORY_ON_START}</cleanHistoryOnStart>
+        </rollingPolicy>
+        <!-- 关键修改点3：移除 TLog 的 AspectLogbackEncoder，使用标准 PatternLayoutEncoder -->
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <append>true</append>
+    </appender>
+
+    <!-- 错误日志文件（仅ERROR级别） -->
+    <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOG_BASE_PATH}/error/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_BASE_PATH}/error/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+            <cleanHistoryOnStart>${CLEAN_HISTORY_ON_START}</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <append>true</append>
+    </appender>
+
+    <!-- 审计日志 -->
+    <appender name="AUDIT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <file>${LOG_BASE_PATH}/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_BASE_PATH}/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
+            <cleanHistoryOnStart>${CLEAN_HISTORY_ON_START}</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <append>true</append>
+    </appender>
+
+    <!-- 异步Appender配置 -->
+    <appender name="ASYNC_DEFAULT_LOG" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="DEFAULT_LOG"/>
+    </appender>
+
+    <appender name="ASYNC_ERROR_LOG" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <appender-ref ref="ERROR_LOG"/>
+    </appender>
+
+    <!-- Logger配置 -->
+    <logger name="auditLog" additivity="false" level="INFO">
+        <appender-ref ref="AUDIT_LOG"/>
+    </logger>
+
+    <!-- 关闭不需要的日志输出 -->
+    <logger name="com.xfvape.uid.buffer.RingBuffer" level="OFF"/>
+    <logger name="com.baidu.unbiz.easymapper" level="OFF"/>
+    <logger name="com.alibaba.nacos.client.naming" level="OFF"/>
+    <logger name="ShardingSphere-SQL" level="WARN"/>
+
+    <!-- 环境配置 -->
+    <springProfile name="dev">
+        <root level="${ROOT_LEVEL}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_DEFAULT_LOG"/>
+            <appender-ref ref="ASYNC_ERROR_LOG"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <root level="${ROOT_LEVEL}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_DEFAULT_LOG"/>
+            <appender-ref ref="ASYNC_ERROR_LOG"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="${ROOT_LEVEL}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_DEFAULT_LOG"/>
+            <appender-ref ref="ASYNC_ERROR_LOG"/>
+        </root>
+    </springProfile>
+
+</configuration>
