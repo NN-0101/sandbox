@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentScope 三种模型加载方式详解</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f6f8fa;
+            color: #1e293b;
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 48px 56px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 16px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 28px;
+        }
+
+        .definition-box {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .definition-box strong {
+            color: #0f172a;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            margin: 14px 0 22px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+        .code-block .keyword {
+            color: #c084fc;
+        }
+        .code-block .string {
+            color: #34d399;
+        }
+        .code-block .annotation {
+            color: #fbbf24;
+        }
+        .code-block .class-name {
+            color: #60a5fa;
+        }
+        .code-block .method {
+            color: #f472b6;
+        }
+        .code-block .number {
+            color: #fbbf24;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-right: 4px;
+        }
+
+        .tag-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .tag-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .tag-purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .tag-orange {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 36px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table tr:hover {
+            background: #f8fafc;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 22px 0;
+        }
+
+        .compare-grid .card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px 20px;
+            border: 1px solid #e2e8f0;
+            border-top: 4px solid #3b82f6;
+        }
+
+        .compare-grid .card.purple {
+            border-top-color: #7c3aed;
+        }
+
+        .compare-grid .card.green {
+            border-top-color: #16a34a;
+        }
+
+        .compare-grid .card .card-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .compare-grid .card .card-tag {
+            font-size: 12px;
+            padding: 1px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .compare-grid .card ul {
+            padding-left: 18px;
+            font-size: 14px;
+        }
+
+        .compare-grid .card li {
+            margin-bottom: 4px;
+        }
+
+        .spi-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+        }
+
+        .spi-note strong {
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 18px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+            .code-block {
+                font-size: 12px;
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🚀 AgentScope 三种模型加载方式详解</h1>
+    <p class="subtitle">字符串 ID · 显式 Builder · ModelCreationContext 高级上下文</p>
+
+    <div class="definition-box">
+        <strong>📌 概述：</strong>
+        AgentScope 提供了三种灵活的模型加载方式，分别适用于不同的场景。
+        从最简单的快速原型，到需要精细控制的多租户系统，你可以根据实际需求选择最合适的方式。
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 一、三种方式概览 -->
+    <!-- ============================================================ -->
+    <h2>一、三种方式概览</h2>
+
+    <div class="compare-grid">
+        <div class="card">
+            <div class="card-title">
+                方式一：字符串 ID
+                <span class="card-tag">最简洁</span>
+            </div>
+            <ul>
+                <li><strong>代码：</strong><code>.model("deepseek:deepseek-v4-flash")</code></li>
+                <li><strong>机制：</strong>SPI 服务发现</li>
+                <li><strong>配置：</strong>环境变量</li>
+                <li><strong>场景：</strong>快速原型、简单应用</li>
+            </ul>
+        </div>
+        <div class="card green">
+            <div class="card-title">
+                方式二：显式 Builder
+                <span class="card-tag">最灵活</span>
+            </div>
+            <ul>
+                <li><strong>代码：</strong><code>OpenAIChatModel.builder()...build()</code></li>
+                <li><strong>机制：</strong>直接使用 Model 实例</li>
+                <li><strong>配置：</strong>YAML / 代码硬编码</li>
+                <li><strong>场景：</strong>精细控制、自定义参数</li>
+            </ul>
+        </div>
+        <div class="card purple">
+            <div class="card-title">
+                方式三：ModelCreationContext
+                <span class="card-tag">最动态</span>
+            </div>
+            <ul>
+                <li><strong>代码：</strong><code>ModelRegistry.resolve(id, context)</code></li>
+                <li><strong>机制：</strong>SPI + 动态上下文</li>
+                <li><strong>配置：</strong>代码动态构建</li>
+                <li><strong>场景：</strong>多租户、API网关、插件系统</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 二、方式一：字符串 ID -->
+    <!-- ============================================================ -->
+    <h2>二、方式一：字符串 ID（SPI 服务发现）</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 方式一：通过模型 ID 加载模型（SPI 服务发现机制）
+ * 配置来源：环境变量（如 DEEPSEEK_API_KEY）
+ * 适用场景：快速原型、简单应用、配置固定
+ */</span>
+<span class="annotation">@GetMapping</span>(<span class="string">"/demo"</span>)
+<span class="keyword">public</span> String demo() {
+    HarnessAgent agent = HarnessAgent.builder()
+            .name(<span class="string">"quickStart"</span>)
+            .model(<span class="string">"deepseek:deepseek-v4-flash"</span>)  <span class="comment">// ← 简洁的字符串 ID</span>
+            .build();
+
+    Msg block = agent.call(Msg.builder().textContent(<span class="string">"你是谁"</span>).build()).block();
+    <span class="keyword">return</span> block.getTextContent();
+}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>特性</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>核心机制</strong></td>
+                <td>Java SPI 服务发现 + <code>ModelRegistry.resolve(modelId)</code></td>
+            </tr>
+            <tr>
+                <td><strong>配置来源</strong></td>
+                <td>环境变量（如 <code>DEEPSEEK_API_KEY</code>、<code>OPENAI_API_KEY</code>）</td>
+            </tr>
+            <tr>
+                <td><strong>是否需要具体 Model 类</strong></td>
+                <td>❌ 否，只需字符串 ID</td>
+            </tr>
+            <tr>
+                <td><strong>是否可动态切换配置</strong></td>
+                <td>❌ 否，启动时固定</td>
+            </tr>
+            <tr>
+                <td><strong>代码简洁度</strong></td>
+                <td>⭐ 最简洁，一行代码</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="spi-note">
+        <strong>📌 模型 ID 格式：</strong> <code>提供商:模型名称</code><br>
+        <strong>示例：</strong>
+        <code>deepseek:deepseek-v4-flash</code>、
+        <code>openai:gpt-4.1-mini</code>、
+        <code>dashscope:qwen-plus</code>、
+        <code>glm:glm-4-plus</code>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 三、方式二：显式 Model builder -->
+    <!-- ============================================================ -->
+    <h2>三、方式二：显式 Model builder（从 YAML 读取配置）</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 方式二：显式 Model builder（从 YAML 读取配置）
+ * 配置来源：application-dev.yml 中的 agentscope.openai.* 配置
+ * 适用场景：需要精细控制参数、自定义 base-url/formatter/timeout 等
+ */</span>
+<span class="annotation">@GetMapping</span>(<span class="string">"/demo1"</span>)
+<span class="keyword">public</span> String demo1() {
+    <span class="comment">// 显式构建 Model，从 YAML 读取配置</span>
+    OpenAIChatModel model = OpenAIChatModel.builder()
+            .apiKey(apiKey)                         <span class="comment">// 从 YAML 读取</span>
+            .baseUrl(baseUrl)                       <span class="comment">// 从 YAML 读取</span>
+            .modelName(modelName)                   <span class="comment">// 从 YAML 读取</span>
+            .stream(stream)                         <span class="comment">// 从 YAML 读取</span>
+            .build();
+
+    <span class="comment">// 将 Model 实例直接传入 Agent，不经过 SPI</span>
+    HarnessAgent agent = HarnessAgent.builder()
+            .name(<span class="string">"quickStart"</span>)
+            .model(model)                           <span class="comment">// ← 直接传入 Model 对象</span>
+            .build();
+
+    Msg block = agent.call(Msg.builder().textContent(<span class="string">"你是谁"</span>).build()).block();
+    <span class="keyword">return</span> block.getTextContent();
+}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>特性</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>核心机制</strong></td>
+                <td>直接使用 <code>Model</code> 实例，不经过 SPI</td>
+            </tr>
+            <tr>
+                <td><strong>配置来源</strong></td>
+                <td><code>application.yml</code> 或代码硬编码</td>
+            </tr>
+            <tr>
+                <td><strong>是否需要具体 Model 类</strong></td>
+                <td>✅ 是（如 <code>OpenAIChatModel</code>）</td>
+            </tr>
+            <tr>
+                <td><strong>是否可动态切换配置</strong></td>
+                <td>❌ 否，启动时固定</td>
+            </tr>
+            <tr>
+                <td><strong>代码复杂度</strong></td>
+                <td>⭐ 中等，需构建 Model 对象</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="spi-note">
+        <strong>📌 优势：</strong>
+        <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+            <li>所有配置集中在 YAML 文件中，便于管理</li>
+            <li>支持自定义 <code>base-url</code>（如公司内部代理地址）</li>
+            <li>可设置超时时间、生成参数（<code>GenerateOptions</code>）等专属配置</li>
+            <li>支持 <code>formatter</code> 自定义消息格式</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 四、方式三：ModelCreationContext -->
+    <!-- ============================================================ -->
+    <h2>四、方式三：ModelCreationContext（高级集成上下文）</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 方式三：ModelCreationContext 高级集成上下文（动态传参 + SPI）
+ * 配置来源：代码中动态构建 ModelCreationContext
+ * 适用场景：多租户系统、API 网关、插件系统、框架适配层
+ */</span>
+<span class="annotation">@GetMapping</span>(<span class="string">"/demo2"</span>)
+<span class="keyword">public</span> String demo2() {
+    <span class="comment">// 1. 构建 ModelCreationContext，动态传入配置</span>
+    ModelCreationContext context = ModelCreationContext.builder()
+            .apiKey(apiKey)                         <span class="comment">// 动态传入 API Key</span>
+            .baseUrl(baseUrl)                       <span class="comment">// 动态传入 Base URL</span>
+            .stream(stream)                         <span class="comment">// 是否启用流式输出</span>
+            .option(<span class="string">"contextWindowSize"</span>, 128000)  <span class="comment">// 扩展配置</span>
+            .build();
+
+    <span class="comment">// 2. 通过 ModelRegistry.resolve() 解析模型</span>
+    <span class="comment">//    底层走 SPI，但配置从 context 中获取</span>
+    Model model = ModelRegistry.resolve(<span class="string">"openai:deepseek-v4-flash"</span>, context);
+
+    <span class="comment">// 3. 将 Model 实例传入 Agent</span>
+    HarnessAgent agent = HarnessAgent.builder()
+            .name(<span class="string">"quickStart"</span>)
+            .model(model)                           <span class="comment">// ← Model 接口类型</span>
+            .build();
+
+    Msg block = agent.call(Msg.builder().textContent(<span class="string">"你是谁"</span>).build()).block();
+    <span class="keyword">return</span> block.getTextContent();
+}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>特性</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>核心机制</strong></td>
+                <td>SPI 服务发现 + <code>ModelCreationContext</code> 动态传参</td>
+            </tr>
+            <tr>
+                <td><strong>配置来源</strong></td>
+                <td>代码中动态构建 <code>ModelCreationContext</code></td>
+            </tr>
+            <tr>
+                <td><strong>是否需要具体 Model 类</strong></td>
+                <td>❌ 否（只需 <code>Model</code> 接口）</td>
+            </tr>
+            <tr>
+                <td><strong>是否可动态切换配置</strong></td>
+                <td>✅ 是，每次调用可传入不同配置</td>
+            </tr>
+            <tr>
+                <td><strong>代码复杂度</strong></td>
+                <td>⭐ 中等，需构建 Context 对象</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="spi-note">
+        <strong>📌 核心特点：</strong>
+        <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+            <li><strong>每次解析可传入不同的 API Key、Base URL</strong>（如按租户隔离）</li>
+            <li><strong>无需依赖具体 Model 类</strong>（如 <code>OpenAIChatModel</code>）</li>
+            <li><strong>不读取环境变量或 YAML</strong>，完全由代码控制</li>
+            <li><strong>默认不缓存</strong>，每次创建新实例；如需缓存需设置 <code>CachePolicy.ENABLED</code></li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 五、多租户场景示例 -->
+    <!-- ============================================================ -->
+    <h2>五、多租户场景示例（demo2 扩展）</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 多租户场景：每个租户有独立的 API Key 和 Base URL
+ */</span>
+<span class="keyword">public</span> String demo2WithTenant(String tenantId) {
+    <span class="comment">// 从租户上下文获取配置</span>
+    TenantConfig tenantConfig = tenantService.getConfig(tenantId);
+
+    ModelCreationContext context = ModelCreationContext.builder()
+            .apiKey(tenantConfig.getApiKey())      <span class="comment">// 租户专属 API Key</span>
+            .baseUrl(tenantConfig.getBaseUrl())    <span class="comment">// 租户专属 Base URL</span>
+            .stream(<span class="keyword">true</span>)
+            .option(<span class="string">"tenantId"</span>, tenantId)          <span class="comment">// 可传入租户标识</span>
+            .build();
+
+    Model model = ModelRegistry.resolve(<span class="string">"openai:deepseek-v4-flash"</span>, context);
+
+    HarnessAgent agent = HarnessAgent.builder()
+            .name(<span class="string">"quickStart"</span>)
+            .model(model)
+            .build();
+
+    Msg block = agent.call(Msg.builder().textContent(<span class="string">"你是谁"</span>).build()).block();
+    <span class="keyword">return</span> block.getTextContent();
+}
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 六、三种方式对比总结 -->
+    <!-- ============================================================ -->
+    <h2>六、三种方式对比总结</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:15%;">对比维度</th>
+                <th style="width:28%;">方式一：字符串 ID</th>
+                <th style="width:28%;">方式二：显式 Builder</th>
+                <th style="width:29%;">方式三：ModelCreationContext</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>核心代码</strong></td>
+                <td><code>.model("prov:model")</code></td>
+                <td><code>Model.builder()...build()</code></td>
+                <td><code>ModelRegistry.resolve(id, ctx)</code></td>
+            </tr>
+            <tr>
+                <td><strong>底层机制</strong></td>
+                <td>SPI 服务发现</td>
+                <td>直接使用 Model 实例</td>
+                <td>SPI + 动态上下文</td>
+            </tr>
+            <tr>
+                <td><strong>配置来源</strong></td>
+                <td>环境变量</td>
+                <td>YAML / 代码硬编码</td>
+                <td>代码动态构建</td>
+            </tr>
+            <tr>
+                <td><strong>是否依赖具体 Model 类</strong></td>
+                <td>❌ 否</td>
+                <td>✅ 是</td>
+                <td>❌ 否</td>
+            </tr>
+            <tr>
+                <td><strong>每次调用可换配置</strong></td>
+                <td>❌ 否</td>
+                <td>❌ 否</td>
+                <td>✅ 是</td>
+            </tr>
+            <tr>
+                <td><strong>是否经过 SPI</strong></td>
+                <td>✅ 是</td>
+                <td>❌ 否</td>
+                <td>✅ 是</td>
+            </tr>
+            <tr>
+                <td><strong>适用场景</strong></td>
+                <td>快速原型、简单应用</td>
+                <td>精细控制、自定义参数</td>
+                <td>多租户、API网关、插件系统</td>
+            </tr>
+            <tr>
+                <td><strong>代码复杂度</strong></td>
+                <td>⭐ 低</td>
+                <td>⭐⭐ 中</td>
+                <td>⭐⭐ 中</td>
+            </tr>
+            <tr>
+                <td><strong>配置灵活性</strong></td>
+                <td>⭐ 低</td>
+                <td>⭐⭐⭐ 高</td>
+                <td>⭐⭐⭐ 最高</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 七、如何选择 -->
+    <!-- ============================================================ -->
+    <h2>七、如何选择</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25%;">你的需求</th>
+                <th>推荐方式</th>
+                <th style="width:30%;">理由</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>快速验证、写 Demo</td>
+                <td><span class="tag tag-blue">方式一：字符串 ID</span></td>
+                <td>代码最简洁，无需额外配置</td>
+            </tr>
+            <tr>
+                <td>需要自定义 Base URL / 超时 / Formatter</td>
+                <td><span class="tag tag-green">方式二：显式 Builder</span></td>
+                <td>所有参数都可控，配置集中在 YAML</td>
+            </tr>
+            <tr>
+                <td>多租户 SaaS 应用</td>
+                <td><span class="tag tag-purple">方式三：ModelCreationContext</span></td>
+                <td>每次请求可传入不同 API Key 和 Base URL</td>
+            </tr>
+            <tr>
+                <td>API 网关 / 代理层</td>
+                <td><span class="tag tag-purple">方式三：ModelCreationContext</span></td>
+                <td>动态路由到不同模型端点</td>
+            </tr>
+            <tr>
+                <td>插件系统 / 框架适配层</td>
+                <td><span class="tag tag-purple">方式三：ModelCreationContext</span></td>
+                <td>不依赖具体 Model 类，解耦灵活</td>
+            </tr>
+            <tr>
+                <td>公司自建模型（非 OpenAI 兼容）</td>
+                <td><span class="tag tag-orange">方式二 + 自定义 SPI</span></td>
+                <td>需实现 <code>ModelProvider</code> 接口 + SPI 配置</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 八、扩展：接入公司自建模型 -->
+    <!-- ============================================================ -->
+    <h2>八、扩展：接入公司自建模型</h2>
+
+    <div class="spi-note">
+        <strong>⚙️ 如果公司自建模型 API 不兼容 OpenAI 格式，需要自行实现 SPI。</strong>
+    </div>
+
+    <h3>步骤 1：实现 ModelProvider</h3>
+    <div class="code-block">
+<span class="keyword">public final class</span> <span class="class-name">MyCompanyModelProvider</span> <span class="keyword">implements</span> ModelProvider {
+
+    <span class="keyword">private static final</span> String PREFIX = <span class="string">"mycomp:"</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public boolean</span> supports(String modelId, ModelCreationContext context) {
+        <span class="keyword">return</span> modelId != <span class="keyword">null</span> &amp;&amp; modelId.startsWith(PREFIX);
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> Model create(String modelId, ModelCreationContext context) {
+        String modelName = modelId.substring(PREFIX.length());
+        <span class="keyword">return</span> MyCompanyChatModel.builder()
+                .apiKey(context.getApiKey())
+                .baseUrl(context.getBaseUrl())
+                .modelName(modelName)
+                .build();
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> String providerId() {
+        <span class="keyword">return</span> <span class="string">"mycomp"</span>;
+    }
+}
+    </div>
+
+    <h3>步骤 2：创建 SPI 配置文件</h3>
+    <p><strong>文件路径：</strong> <code>src/main/resources/META-INF/services/io.agentscope.core.model.spi.ModelProvider</code></p>
+    <div class="code-block">
+<span class="comment"># 写入你的 Provider 全限定类名</span>
+com.yourcompany.agentscope.model.MyCompanyModelProvider
+    </div>
+
+    <h3>步骤 3：使用自定义模型</h3>
+    <div class="code-block">
+<span class="comment">// 方式一：字符串 ID</span>
+.model(<span class="string">"mycomp:my-model-name"</span>)
+
+<span class="comment">// 方式二：ModelCreationContext</span>
+Model model = ModelRegistry.resolve(<span class="string">"mycomp:my-model-name"</span>, context);
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 九、核心类汇总 -->
+    <!-- ============================================================ -->
+    <h2>九、核心源码类</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>类名</th>
+                <th>路径</th>
+                <th>作用</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>ModelRegistry</code></td>
+                <td><code>io.agentscope.core.model.ModelRegistry</code></td>
+                <td>模型注册与解析入口，支持 SPI 和 Context 解析</td>
+            </tr>
+            <tr>
+                <td><code>ModelProvider</code></td>
+                <td><code>io.agentscope.core.model.spi.ModelProvider</code></td>
+                <td>SPI 接口，所有模型提供商必须实现</td>
+            </tr>
+            <tr>
+                <td><code>ModelCreationContext</code></td>
+                <td><code>io.agentscope.core.model.ModelCreationContext</code></td>
+                <td>动态传参上下文，支持 API Key、Base URL 等</td>
+            </tr>
+            <tr>
+                <td><code>OpenAIChatModel</code></td>
+                <td><code>io.agentscope.extensions.model.openai</code></td>
+                <td>OpenAI 兼容模型实现，DeepSeek 等使用</td>
+            </tr>
+            <tr>
+                <td><code>DeepSeekModelProvider</code></td>
+                <td><code>io.agentscope.extensions.model.openai.compat.deepseek</code></td>
+                <td>DeepSeek 专属 Provider，匹配 <code>deepseek:</code></td>
+            </tr>
+            <tr>
+                <td><code>ServiceLoader</code></td>
+                <td><code>java.util.ServiceLoader</code></td>
+                <td>Java 标准 SPI 加载器</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 十、快速对照表 -->
+    <!-- ============================================================ -->
+    <h2>十、快速对照表</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>方式</th>
+                <th>Endpoint</th>
+                <th>配置方式</th>
+                <th>灵活性</th>
+                <th>推荐场景</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="tag tag-blue">字符串 ID</span></td>
+                <td><code>/demo</code></td>
+                <td>环境变量</td>
+                <td>⭐</td>
+                <td>快速原型</td>
+            </tr>
+            <tr>
+                <td><span class="tag tag-green">显式 Builder</span></td>
+                <td><code>/demo1</code></td>
+                <td>YAML</td>
+                <td>⭐⭐⭐</td>
+                <td>精细控制</td>
+            </tr>
+            <tr>
+                <td><span class="tag tag-purple">ModelCreationContext</span></td>
+                <td><code>/demo2</code></td>
+                <td>代码动态构建</td>
+                <td>⭐⭐⭐⭐</td>
+                <td>多租户/网关</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 13px; text-align: center;">
+        AgentScope 三种模型加载方式详解 · 完整对照文档
+    </div>
+
+</div>
+
+</body>
+</html>
