@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentScope vs Spring AI Alibaba · 框架对比详解</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f6f8fa;
+            color: #1e293b;
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 48px 56px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 16px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 28px;
+        }
+
+        .definition-box {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .definition-box strong {
+            color: #0f172a;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            margin: 14px 0 22px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+        .code-block .keyword {
+            color: #c084fc;
+        }
+        .code-block .string {
+            color: #34d399;
+        }
+        .code-block .annotation {
+            color: #fbbf24;
+        }
+        .code-block .class-name {
+            color: #60a5fa;
+        }
+        .code-block .method {
+            color: #f472b6;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-right: 4px;
+        }
+
+        .tag-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .tag-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .tag-purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .tag-orange {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .tag-red {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .tag-gray {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 36px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table tr:hover {
+            background: #f8fafc;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 22px 0;
+        }
+
+        .compare-grid .card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px 20px;
+            border: 1px solid #e2e8f0;
+            border-top: 4px solid #3b82f6;
+        }
+
+        .compare-grid .card.orange {
+            border-top-color: #ea580c;
+        }
+
+        .compare-grid .card .card-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .compare-grid .card .card-tag {
+            font-size: 12px;
+            padding: 1px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .compare-grid .card ul {
+            padding-left: 18px;
+            font-size: 14px;
+        }
+
+        .compare-grid .card li {
+            margin-bottom: 4px;
+        }
+
+        .flow-chart {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 18px 0 24px 0;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 2;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .flow-chart .arrow {
+            color: #94a3b8;
+        }
+        .flow-chart .step {
+            color: #0f172a;
+        }
+        .flow-chart .highlight {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .flow-chart .match {
+            color: #16a34a;
+            font-weight: 600;
+        }
+        .flow-chart .provider {
+            color: #7c3aed;
+        }
+
+        .spi-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+        }
+
+        .spi-note strong {
+            color: #92400e;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 22px 0;
+        }
+
+        .summary-grid .item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 14px 18px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-grid .item .label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .summary-grid .item .value {
+            font-size: 15px;
+            color: #0f172a;
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: #e2e8f0;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 18px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+            .flow-chart {
+                font-size: 12px;
+                padding: 16px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ==================== 标题 ==================== -->
+    <h1>⚔️ AgentScope vs Spring AI Alibaba</h1>
+    <p class="subtitle">两种 Agent 框架的设计哲学 · 从 ReActAgent 到企业级 Workflow 的路线抉择</p>
+
+    <!-- ==================== 一句话总结 ==================== -->
+    <div class="definition-box">
+        <strong>📌 一句话总结：</strong>
+        <strong>AgentScope</strong> 是以 Agent 为核心的 <strong>Agentic 框架</strong>，而 <strong>Spring AI Alibaba</strong> 是以 Graph 为核心的 <strong>Workflow 编排框架</strong>。
+        两者虽然都提供 <code>ReActAgent</code>，但设计哲学、控制权归属和适用场景截然不同。
+    </div>
+
+    <hr>
+
+    <!-- ==================== 一、设计哲学对比 ==================== -->
+    <h2>一、设计哲学对比</h2>
+
+    <div class="compare-grid">
+        <div class="card">
+            <div class="card-title">
+                🧠 AgentScope
+                <span class="card-tag">Agentic · 智能体驱动</span>
+            </div>
+            <ul>
+                <li><strong>控制权归属：</strong>在 <strong>LLM 侧</strong>，由模型自主规划行动路径</li>
+                <li><strong>核心思想：</strong>给 LLM 一个目标，让它自己找路完成</li>
+                <li><strong>适用场景：</strong>开放式、需要动态规划的任务</li>
+                <li><strong>最佳实践：</strong>大局可控，局部自主</li>
+                <li><strong>编程语言：</strong>Java / Python</li>
+                <li><strong>生态基础：</strong>自建 Agentic 运行时</li>
+            </ul>
+        </div>
+        <div class="card orange">
+            <div class="card-title">
+                🏢 Spring AI Alibaba
+                <span class="card-tag">Workflow · 工作流编排</span>
+            </div>
+            <ul>
+                <li><strong>控制权归属：</strong>在 <strong>代码侧</strong>，由开发者用代码结构“框住”流程</li>
+                <li><strong>核心思想：</strong>用声明式 API 定义节点和边，构建可预测的流程</li>
+                <li><strong>适用场景：</strong>高风险、流程固定的企业级业务</li>
+                <li><strong>最佳实践：</strong>外层是 Workflow，节点是 Agent</li>
+                <li><strong>编程语言：</strong>Java</li>
+                <li><strong>生态基础：</strong>Spring AI 生态 + 阿里云基础设施</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ==================== 二、ReActAgent 对比 ==================== -->
+    <h2>二、ReActAgent 对比：同名不同命</h2>
+
+    <div class="compare-grid">
+        <div class="card">
+            <div class="card-title">
+                🧠 AgentScope · ReActAgent
+                <span class="card-tag">Agentic 核心</span>
+            </div>
+            <ul>
+                <li><strong>角色定位：</strong>Agentic 范式的<strong>核心实现</strong></li>
+                <li><strong>核心职责：</strong>推理-行动（ReAct）循环引擎，自主决策</li>
+                <li><strong>记忆管理：</strong>智能体自主控制 + 静态管理 + 记忆压缩</li>
+                <li><strong>执行控制：</strong><code>maxIters</code> 控制最大迭代，防止死循环</li>
+                <li><strong>上下文传递：</strong><code>RuntimeContext</code> 传递瞬态数据</li>
+                <li><strong>扩展方式：</strong>Middleware 链 + SPI 插件</li>
+            </ul>
+        </div>
+        <div class="card orange">
+            <div class="card-title">
+                🏢 Spring AI Alibaba · ReactAgent
+                <span class="card-tag">Workflow 节点</span>
+            </div>
+            <ul>
+                <li><strong>角色定位：</strong>Workflow 范式下的<strong>高级节点/子图</strong></li>
+                <li><strong>核心职责：</strong>作为 Graph 节点执行特定推理-行动任务</li>
+                <li><strong>记忆管理：</strong>由外部 Graph 状态管理，节点间共享</li>
+                <li><strong>执行控制：</strong>由 Graph 编排引擎控制执行顺序</li>
+                <li><strong>上下文传递：</strong>通过 Graph 状态机传递</li>
+                <li><strong>扩展方式：</strong>Spring 注解 + 阿里云服务集成</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ==================== 三、核心能力对比 ==================== -->
+    <h2>三、核心能力对比</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25%;">能力维度</th>
+                <th style="width:37.5%;">AgentScope</th>
+                <th style="width:37.5%;">Spring AI Alibaba</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>设计范式</strong></td>
+                <td><span class="tag tag-blue">Agentic (智能体驱动)</span></td>
+                <td><span class="tag tag-orange">Workflow (工作流编排)</span></td>
+            </tr>
+            <tr>
+                <td><strong>核心组件</strong></td>
+                <td>Agent (ReActAgent, HarnessAgent)</td>
+                <td>Graph + Agent (作为节点)</td>
+            </tr>
+            <tr>
+                <td><strong>控制权归属</strong></td>
+                <td>LLM 侧（自主规划）</td>
+                <td>代码侧（开发者定义流程）</td>
+            </tr>
+            <tr>
+                <td><strong>工作流编排</strong></td>
+                <td>❌ 无原生支持（Agent 自主决策）</td>
+                <td>✅ 原生 Graph 编排引擎</td>
+            </tr>
+            <tr>
+                <td><strong>记忆管理</strong></td>
+                <td>✅ 多模式长期记忆 + 压缩</td>
+                <td>✅ Graph 状态管理</td>
+            </tr>
+            <tr>
+                <td><strong>多智能体协作</strong></td>
+                <td>✅ 原生支持（HarnessAgent 子智能体）</td>
+                <td>✅ 通过 Graph 节点编排实现</td>
+            </tr>
+            <tr>
+                <td><strong>企业级集成</strong></td>
+                <td>⭕ 可扩展但非内置</td>
+                <td>✅ Spring Cloud + 阿里云生态</td>
+            </tr>
+            <tr>
+                <td><strong>开发风格</strong></td>
+                <td>Builder + 代码配置</td>
+                <td>注解驱动 + 声明式配置</td>
+            </tr>
+            <tr>
+                <td><strong>编程语言</strong></td>
+                <td>Java / Python</td>
+                <td>Java</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ==================== 四、架构关系图 ==================== -->
+    <h2>四、架构关系图</h2>
+
+    <div class="flow-chart">
+<span class="highlight">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="highlight">│                    AgentScope 架构                              │</span>
+<span class="highlight">│  ┌─────────────────────────────────────────────────────────────┐ │</span>
+<span class="highlight">│  │                    Agent 接口                               │ │</span>
+<span class="highlight">│  └────────────────────────────┬────────────────────────────────┘ │</span>
+<span class="arrow">│                               │                                    │</span>
+<span class="arrow">│                               ▼                                    │</span>
+<span class="highlight">│  ┌─────────────────────────────────────────────────────────────┐ │</span>
+<span class="highlight">│  │                    ReActAgent (默认实现)                    │ │</span>
+<span class="highlight">│  │  • 推理-行动循环引擎                                         │ │</span>
+<span class="highlight">│  │  • 模型调用、工具执行、上下文管理                              │ │</span>
+<span class="highlight">│  └────────────────────────────┬────────────────────────────────┘ │</span>
+<span class="arrow">│                               │                                    │</span>
+<span class="arrow">│                               │ 薄包装                             │</span>
+<span class="arrow">│                               ▼                                    │</span>
+<span class="highlight">│  ┌─────────────────────────────────────────────────────────────┐ │</span>
+<span class="highlight">│  │                    HarnessAgent (生产增强)                  │ │</span>
+<span class="highlight">│  │  • 工作区 (Workspace)    • 子智能体管理                     │ │</span>
+<span class="highlight">│  │  • 记忆压缩               • 高级持久化                       │ │</span>
+<span class="highlight">│  └─────────────────────────────────────────────────────────────┘ │</span>
+<span class="highlight">└─────────────────────────────────────────────────────────────────┘</span>
+
+<span class="arrow">                                    │</span>
+<span class="arrow">                                    │ 对比</span>
+<span class="arrow">                                    ▼</span>
+
+<span class="highlight">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="highlight">│                    Spring AI Alibaba 架构                        │</span>
+<span class="highlight">│  ┌─────────────────────────────────────────────────────────────┐ │</span>
+<span class="highlight">│  │                    Graph 工作流引擎                         │ │</span>
+<span class="highlight">│  │  • 声明式节点定义 (Stateful/Stateless)                     │ │</span>
+<span class="highlight">│  │  • 有向无环图 (DAG) 编排                                   │ │</span>
+<span class="highlight">│  └────────────────────────────┬────────────────────────────────┘ │</span>
+<span class="arrow">│                               │                                    │</span>
+<span class="arrow">│          ┌────────────────────┼────────────────────┐              │</span>
+<span class="arrow">│          ▼                    ▼                    ▼              │</span>
+<span class="highlight">│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐       │</span>
+<span class="highlight">│  │   Agent 节点   │  │   LLM 节点    │  │   Tool 节点   │       │</span>
+<span class="highlight">│  │ (ReActAgent)  │  │ (ChatModel)   │  │ (Function)    │       │</span>
+<span class="highlight">│  └───────────────┘  └───────────────┘  └───────────────┘       │</span>
+<span class="highlight">│                                                                │</span>
+<span class="highlight">│  • 节点间通过状态 (State) 传递数据                              │</span>
+<span class="highlight">│  • 支持条件路由、并行执行、循环                                 │</span>
+<span class="highlight">│  • 深度集成 Spring Boot + 阿里云服务                           │</span>
+<span class="highlight">└─────────────────────────────────────────────────────────────────┘</span>
+    </div>
+
+    <hr>
+
+    <!-- ==================== 五、代码对比 ==================== -->
+    <h2>五、代码对比</h2>
+
+    <h3>5.1 AgentScope · 原生 Agentic 风格</h3>
+    <div class="code-block">
+<span class="comment">// AgentScope: 以 Agent 为中心，自主决策</span>
+HarnessAgent agent = HarnessAgent.builder()
+        .name(<span class="string">"assistant"</span>)
+        .sysPrompt(<span class="string">"你是一个有帮助的助手，可以自主调用工具完成任务。"</span>)
+        .model(<span class="string">"deepseek:deepseek-v4-flash"</span>)
+        .toolkit(<span class="keyword">new</span> Toolkit()
+            .tool(<span class="string">"search"</span>, searchFunction)
+            .tool(<span class="string">"calculate"</span>, calcFunction))
+        .enableMemoryCompression(<span class="keyword">true</span>)
+        .build();
+
+<span class="comment">// Agent 自主决定调用哪些工具、按什么顺序</span>
+Msg result = agent.call(List.of(
+    <span class="keyword">new</span> UserMessage(<span class="string">"帮我查一下今年Q3的营收，然后计算同比增幅"</span>)
+)).block();
+    </div>
+
+    <h3>5.2 Spring AI Alibaba · 声明式 Workflow 风格</h3>
+    <div class="code-block">
+<span class="comment">// Spring AI Alibaba: 以 Graph 为中心，流程由开发者定义</span>
+<span class="annotation">@Component</span>
+<span class="keyword">public class</span> <span class="class-name">FinancialAnalysisWorkflow</span> {
+
+    <span class="annotation">@Bean</span>
+    <span class="keyword">public</span> Graph&lt;State, Node&gt; buildGraph() {
+        <span class="keyword">return</span> Graph.builder()
+            .addNode(<span class="string">"query"</span>, queryAgent)          <span class="comment">// Agent 节点</span>
+            .addNode(<span class="string">"calculate"</span>, calculateAgent)   <span class="comment">// Agent 节点</span>
+            .addNode(<span class="string">"summarize"</span>, summarizeAgent)   <span class="comment">// Agent 节点</span>
+            .edge(<span class="string">"query"</span>, <span class="string">"calculate"</span>)           <span class="comment">// 流程由开发者显式定义</span>
+            .edge(<span class="string">"calculate"</span>, <span class="string">"summarize"</span>)
+            .build();
+    }
+
+    <span class="annotation">@Component</span>
+    <span class="keyword">static class</span> <span class="class-name">QueryAgent</span> <span class="keyword">extends</span> ReactAgent {
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> State call(State state) {
+            <span class="comment">// 执行查询逻辑</span>
+            <span class="keyword">return</span> state;
+        }
+    }
+}
+    </div>
+
+    <hr>
+
+    <!-- ==================== 六、选择指南 ==================== -->
+    <h2>六、选择指南</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25%;">你的需求</th>
+                <th>推荐框架</th>
+                <th style="width:35%;">理由</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>开放式任务、AI 自主决策</td>
+                <td><span class="tag tag-blue">AgentScope</span></td>
+                <td>Agentic 范式天生适合 LLM 自主规划</td>
+            </tr>
+            <tr>
+                <td>复杂多智能体协作系统</td>
+                <td><span class="tag tag-blue">AgentScope</span></td>
+                <td>原生 HarnessAgent 子智能体管理</td>
+            </tr>
+            <tr>
+                <td>快速原型验证</td>
+                <td><span class="tag tag-blue">AgentScope</span></td>
+                <td>简洁 API，Python/Java 双语言支持</td>
+            </tr>
+            <tr>
+                <td>企业级固定业务流程</td>
+                <td><span class="tag tag-orange">Spring AI Alibaba</span></td>
+                <td>Workflow 流程可控、可预测</td>
+            </tr>
+            <tr>
+                <td>已有 Spring Boot 微服务架构</td>
+                <td><span class="tag tag-orange">Spring AI Alibaba</span></td>
+                <td>深度集成，学习成本低</td>
+            </tr>
+            <tr>
+                <td>需要强治理、监控、审计</td>
+                <td><span class="tag tag-orange">Spring AI Alibaba</span></td>
+                <td>企业级基础设施完善</td>
+            </tr>
+            <tr>
+                <td>使用阿里云服务 (DashScope, Nacos)</td>
+                <td><span class="tag tag-orange">Spring AI Alibaba</span></td>
+                <td>原生阿里云生态适配</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ==================== 七、总结 ==================== -->
+    <h2>七、总结</h2>
+
+    <div class="summary-grid">
+        <div class="item">
+            <div class="label">AgentScope 本质</div>
+            <div class="value">Agentic 框架 · AI 自主决策</div>
+        </div>
+        <div class="item">
+            <div class="label">Spring AI Alibaba 本质</div>
+            <div class="value">Workflow 框架 · 流程可控</div>
+        </div>
+        <div class="item">
+            <div class="label">控制权归属</div>
+            <div class="value">AgentScope → LLM / 阿里 → 开发者</div>
+        </div>
+        <div class="item">
+            <div class="label">ReActAgent 角色</div>
+            <div class="value">AgentScope → 核心 / 阿里 → 节点</div>
+        </div>
+        <div class="item">
+            <div class="label">适用场景</div>
+            <div class="value">开放探索 vs 固定流程</div>
+        </div>
+        <div class="item">
+            <div class="label">选择建议</div>
+            <div class="value">自主性强 → AgentScope；企业可控 → 阿里</div>
+        </div>
+    </div>
+
+    <div class="spi-note">
+        <strong>📌 最终建议：</strong>
+        如果你的目标是构建一个以 AI 智能体为核心的<strong>下一代应用</strong>，需要它具备高度的自主规划和决策能力，<strong>AgentScope</strong> 是更先进、更纯粹的选择。
+        <br><br>
+        如果你希望在现有的 <strong>Java / Spring Boot 企业级系统</strong>中，以<strong>可控、可预测</strong>的方式引入 AI 能力，并且你已经深度使用了阿里云服务，那么 <strong>Spring AI Alibaba</strong> 会是更自然、更稳固的选择。
+    </div>
+
+    <hr>
+
+    <!-- ==================== 八、快速对照表 ==================== -->
+    <h2>八、快速对照表</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:20%;">维度</th>
+                <th style="width:40%;">AgentScope</th>
+                <th style="width:40%;">Spring AI Alibaba</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>设计范式</strong></td>
+                <td><span class="tag tag-blue">Agentic</span></td>
+                <td><span class="tag tag-orange">Workflow</span></td>
+            </tr>
+            <tr>
+                <td><strong>核心抽象</strong></td>
+                <td><code>Agent</code></td>
+                <td><code>Graph</code> + <code>Node</code></td>
+            </tr>
+            <tr>
+                <td><strong>控制流</strong></td>
+                <td>LLM 自主决策</td>
+                <td>开发者显式编排</td>
+            </tr>
+            <tr>
+                <td><strong>编程范式</strong></td>
+                <td>Builder + 链式调用</td>
+                <td>注解 + 声明式</td>
+            </tr>
+            <tr>
+                <td><strong>多语言支持</strong></td>
+                <td>Java + Python</td>
+                <td>Java (Spring 生态)</td>
+            </tr>
+            <tr>
+                <td><strong>企业级治理</strong></td>
+                <td>⭕ 需自行集成</td>
+                <td>✅ 原生支持</td>
+            </tr>
+            <tr>
+                <td><strong>学习曲线</strong></td>
+                <td>中等（Agent 概念）</td>
+                <td>中等（Spring 生态 + Graph）</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 13px; text-align: center;">
+        AgentScope vs Spring AI Alibaba · 框架对比详解
+    </div>
+
+</div>
+
+</body>
+</html>
