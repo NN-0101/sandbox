@@ -1,6 +1,11 @@
 package com.sandbox.agentscope.controller;
 
+import io.agentscope.core.agent.RuntimeContext;
+import io.agentscope.core.event.AgentEventType;
+import io.agentscope.core.event.TextBlockDeltaEvent;
+import io.agentscope.core.event.ToolCallStartEvent;
 import io.agentscope.core.message.Msg;
+import io.agentscope.core.message.UserMessage;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.model.ModelCreationContext;
 import io.agentscope.core.model.ModelRegistry;
@@ -10,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 /**
  * AgentScope QuickStart 示例控制器
@@ -67,6 +73,48 @@ public class QuickStartController {
         assert block != null;
         return block.getTextContent();
     }
+
+    /**
+     * 流式返回
+     *
+     * @return 结果
+     */
+    @GetMapping("/demo-stream")
+    public Flux<String> demoStream() {
+        // 构建 Agent，通过模型 ID 字符串指定使用哪个模型
+        // 底层由 ModelRegistry.resolve(modelId) 自动解析
+        HarnessAgent agent = HarnessAgent.builder()
+                .name("quickStart")
+                // 模型 ID 格式：提供商:模型名称
+                // DeepSeek 示例，需要配置环境变量 DEEPSEEK_API_KEY=sk-xxx
+                .model("deepseek:deepseek-v4-flash")
+                .build();
+
+        return agent.streamEvents("你是谁", RuntimeContext.empty())
+                // doOnNext：在流中每个事件发出时执行，但不影响事件本身
+                // 作用：在服务端控制台打印调试信息，方便开发时观察 Agent 行为
+                .doOnNext(event -> {
+                    // 判断事件类型：文本块增量事件（即模型输出的流式文本片段）
+                    if (event.getType() == AgentEventType.TEXT_BLOCK_DELTA) {
+                        // 模型返回的流式文本片段 —— 追加到界面或标准输出
+                        System.out.print(((TextBlockDeltaEvent) event).getDelta());
+                    }
+                    // 判断事件类型：工具调用开始事件
+                    else if (event.getType() == AgentEventType.TOOL_CALL_START) {
+                        // 智能体即将调用工具 —— 展示调用信息
+                        System.out.println("\n[tool] " + ((ToolCallStartEvent) event).getToolCallName());
+                    }
+                })
+                // filter：过滤流中的事件，只允许满足条件的事件通过
+                // 作用：只保留 TEXT_BLOCK_DELTA 类型的事件，过滤掉工具调用等其他事件
+                // 结果：前端只会收到文本内容，不会收到工具调用等信息
+                .filter(event -> event.getType() == AgentEventType.TEXT_BLOCK_DELTA)
+                // map：将每个事件转换为另一种类型
+                // 作用：从 TEXT_BLOCK_DELTA 事件中提取出实际的文本增量内容（String）
+                // 结果：Flux<AgentEvent> 变成 Flux<String>，前端直接收到文本片段
+                .map(event -> ((TextBlockDeltaEvent) event).getDelta());
+    }
+
 
     /**
      * 方式二：显式 Model builder（从 YAML 读取配置）
