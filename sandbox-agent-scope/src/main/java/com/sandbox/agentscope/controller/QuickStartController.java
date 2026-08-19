@@ -5,8 +5,7 @@ import io.agentscope.core.event.AgentEventType;
 import io.agentscope.core.event.TextBlockDeltaEvent;
 import io.agentscope.core.event.ToolCallStartEvent;
 import io.agentscope.core.message.Msg;
-import io.agentscope.core.message.UserMessage;
-import io.agentscope.core.model.GenerateOptions;
+import io.agentscope.core.model.CachePolicy;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.model.ModelCreationContext;
 import io.agentscope.core.model.ModelRegistry;
@@ -26,7 +25,7 @@ import reactor.core.publisher.Flux;
  * @create 2026/08/19
  */
 @RestController
-@RequestMapping("quick-start")
+@RequestMapping("/quick-start")
 public class QuickStartController {
 
     // ============================================================
@@ -58,8 +57,8 @@ public class QuickStartController {
      *
      * @return 模型返回的文本内容
      */
-    @GetMapping("/demo")
-    public String demo() {
+    @GetMapping("/resolve-by-model-id")
+    public String resolveByModelId() {
         // 构建 Agent，通过模型 ID 字符串指定使用哪个模型
         // 底层由 ModelRegistry.resolve(modelId) 自动解析
         HarnessAgent agent = HarnessAgent.builder()
@@ -76,12 +75,12 @@ public class QuickStartController {
     }
 
     /**
-     * 流式返回
+     * 方式一（流式）：通过模型 ID 加载模型（SPI 服务发现机制）- 流式返回
      *
-     * @return 结果
+     * @return 流式文本片段
      */
-    @GetMapping("/demo-stream")
-    public Flux<String> demoStream() {
+    @GetMapping("/resolve-by-model-id-stream")
+    public Flux<String> resolveByModelIdStream() {
         // 构建 Agent，通过模型 ID 字符串指定使用哪个模型
         // 底层由 ModelRegistry.resolve(modelId) 自动解析
         HarnessAgent agent = HarnessAgent.builder()
@@ -133,8 +132,8 @@ public class QuickStartController {
      *
      * @return 模型返回的文本内容
      */
-    @GetMapping("/demo1")
-    public String demo1() {
+    @GetMapping("/build-by-builder")
+    public String buildByBuilder() {
         // 显式构建 Model，从 YAML 读取配置
         OpenAIChatModel model = OpenAIChatModel.builder()
                 .apiKey(apiKey)
@@ -145,7 +144,7 @@ public class QuickStartController {
 //                .generateOptions(GenerateOptions.builder()
 //                        .temperature(0.7)
 //                        .maxTokens(2048)
-//                        // thinkingBudget 传的是整数（Token数量），用来控制模型在输出最终答案前，能花费多少Token用于内部“思考”和推理，可以理解为一种“计算资源投入
+//                        // thinkingBudget 传的是整数（Token数量），用来控制模型在输出最终答案前，能花费多少Token用于内部"思考"和推理，可以理解为一种"计算资源投入。禁用思考模式可以传0
 //                        .thinkingBudget(1024)
 //                        .build())
                 .build();
@@ -181,8 +180,8 @@ public class QuickStartController {
      *
      * @return 模型返回的文本内容
      */
-    @GetMapping("/demo2")
-    public String demo2() {
+    @GetMapping("/resolve-with-context")
+    public String resolveWithContext() {
         // 1. 构建 ModelCreationContext，动态传入配置
         ModelCreationContext context = ModelCreationContext.builder()
                 // 动态传入 API Key（可来自租户、用户等上下文）
@@ -193,6 +192,10 @@ public class QuickStartController {
                 .stream(stream)                         // 从 YAML 读取
                 // 扩展模块定义的标量配置（key 由具体模型提供商文档约定）
                 .option("contextWindowSize", 128000)
+                // 缓存策略 ModelRegistry 会缓存简单provider:model解析出的模型。
+                // 带 context（ModelCreationContext）解析出的模型默认不缓存，避免不同租户的 API key、base URL 或 stream 配置复用到同一个模型实例。
+                // 其他两种创建方式由框架内部决定
+                .cachePolicy(CachePolicy.DEFAULT)
                 // 以类型为 key 的组件对象，用于传入更复杂的提供商配置
                 // .component(
                 //         GenerateOptions.class,
