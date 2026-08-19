@@ -6,6 +6,7 @@ import io.agentscope.core.event.TextBlockDeltaEvent;
 import io.agentscope.core.event.ToolCallStartEvent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.UserMessage;
+import io.agentscope.core.model.GenerateOptions;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.model.ModelCreationContext;
 import io.agentscope.core.model.ModelRegistry;
@@ -136,17 +137,17 @@ public class QuickStartController {
     public String demo1() {
         // 显式构建 Model，从 YAML 读取配置
         OpenAIChatModel model = OpenAIChatModel.builder()
-                .apiKey(apiKey)                         // 从 YAML 读取
-                .baseUrl(baseUrl)                       // 从 YAML 读取
-                .modelName(modelName)                   // 从 YAML 读取
-                .stream(stream)                         // 从 YAML 读取
+                .apiKey(apiKey)
+                .baseUrl(baseUrl)
+                .modelName(modelName)
+                .stream(stream)
                 // 可选：自定义生成参数
-                // .defaultOptions(GenerateOptions.builder()
-                //         .temperature(0.7)
-                //         .maxTokens(2048)
-                //         .build())
-                // 可选：自定义超时时间
-                // .timeout(Duration.ofSeconds(60))
+//                .generateOptions(GenerateOptions.builder()
+//                        .temperature(0.7)
+//                        .maxTokens(2048)
+//                        // thinkingBudget 传的是整数（Token数量），用来控制模型在输出最终答案前，能花费多少Token用于内部“思考”和推理，可以理解为一种“计算资源投入
+//                        .thinkingBudget(1024)
+//                        .build())
                 .build();
 
         // 将 Model 实例直接传入 Agent
