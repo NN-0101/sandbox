@@ -1,0 +1,22 @@
+server:
+  port: 1013
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+    context-path: /sandbox-agent-scope
+  error:
+    whitelabel:
+      enabled: false # 禁用默认错误页面
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  web:
+    resources:
+      add-mappings: false # 禁用默认的静态资源映射
+  application:
+    name: sandbox-agent-scope
+  profiles:
+    active: dev

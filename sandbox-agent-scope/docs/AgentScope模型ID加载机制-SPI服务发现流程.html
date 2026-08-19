@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentScope 模型 ID 加载机制 · SPI 服务发现流程</title>
+    <style>
+        /* 样式保持不变 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f6f8fa;
+            color: #1e293b;
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 48px 56px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 16px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 28px;
+        }
+
+        .definition-box {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .definition-box strong {
+            color: #0f172a;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            margin: 14px 0 22px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+        .code-block .keyword {
+            color: #c084fc;
+        }
+        .code-block .string {
+            color: #34d399;
+        }
+        .code-block .class-name {
+            color: #60a5fa;
+        }
+        .code-block .method {
+            color: #f472b6;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-right: 4px;
+        }
+
+        .tag-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .tag-orange {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .tag-purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 36px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table tr:hover {
+            background: #f8fafc;
+        }
+
+        .flow-chart {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 18px 0 24px 0;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 2;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .flow-chart .arrow {
+            color: #94a3b8;
+        }
+        .flow-chart .step {
+            color: #0f172a;
+        }
+        .flow-chart .highlight {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .flow-chart .provider {
+            color: #7c3aed;
+        }
+        .flow-chart .match {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 22px 0;
+        }
+
+        .summary-grid .item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 14px 18px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-grid .item .label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .summary-grid .item .value {
+            font-size: 15px;
+            color: #0f172a;
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .spi-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+        }
+
+        .spi-note strong {
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 18px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .flow-chart {
+                font-size: 12px;
+                padding: 16px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ==================== 标题 ==================== -->
+    <h1>🔍 AgentScope 模型 ID 加载机制</h1>
+    <p class="subtitle">SPI 服务发现 · 从 <code>model("prov:model-name")</code> 到实际 API 调用的完整流程</p>
+
+    <!-- ==================== 术语定义 ==================== -->
+    <div class="definition-box">
+        <strong>📌 术语：通过模型 ID 加载模型</strong><br>
+        在 AgentScope 中，通过 <code>.model("提供商:模型名称")</code> 这种 <strong>字符串 ID</strong> 方式来加载模型，
+        底层依赖 <strong>Java SPI（Service Provider Interface）</strong> 机制自动发现并匹配对应的 <code>ModelProvider</code> 实现。
+    </div>
+
+    <!-- ==================== 一、调用入口 ==================== -->
+    <h2>一、调用入口</h2>
+
+    <div class="code-block">
+<span class="comment">// QuickStartController.java</span>
+HarnessAgent agent = HarnessAgent.builder()
+        .name(<span class="string">"quickStart"</span>)
+        .model(<span class="string">"deepseek:deepseek-v4-flash"</span>)  <span class="comment">// ← 通过 ID 加载模型</span>
+        .build();
+    </div>
+
+    <p><code>HarnessAgent.Builder.model(String modelId)</code> 最终会调用 <code>ModelRegistry.resolve(modelId)</code>。</p>
+
+    <!-- ==================== 二、核心源码 ==================== -->
+    <h2>二、核心源码：ModelRegistry.resolve()</h2>
+
+    <p><strong>类路径：</strong> <code>io.agentscope.core.model.ModelRegistry</code></p>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 通过模型 ID 解析并创建 Model 实例
+ * 调用方式：ModelRegistry.resolve("deepseek:deepseek-v4-flash")
+ */</span>
+<span class="keyword">public static</span> Model resolve(String modelId, ModelCreationContext context) {
+    Objects.requireNonNull(modelId, <span class="string">"modelId"</span>);
+    String trimmed = modelId.trim();
+
+    <span class="comment">// 步骤 1：查命名注册（手动注册的模型）</span>
+    Model named = namedModels.get(trimmed);
+    <span class="keyword">if</span> (named != <span class="keyword">null</span>) <span class="keyword">return</span> named;
+
+    <span class="comment">// 步骤 2：查缓存</span>
+    ModelCacheKey cacheKey = cacheKey(trimmed, context);
+    <span class="keyword">if</span> (cacheKey != <span class="keyword">null</span>) {
+        Model cached = resolvedCache.get(cacheKey);
+        <span class="keyword">if</span> (cached != <span class="keyword">null</span>) <span class="keyword">return</span> cached;
+    }
+
+    <span class="comment">// 步骤 3：查用户注册的 Factory</span>
+    ProviderEntry entry = findMatchingUserEntry(trimmed);
+
+    <span class="comment">// 步骤 4：【核心】通过 Java SPI 加载 ModelProvider 并匹配</span>
+    ModelProvider provider = entry == <span class="keyword">null</span>
+        ? findServiceProvider(trimmed, context)  <span class="comment">// ← SPI 服务发现</span>
+        : <span class="keyword">null</span>;
+
+    <span class="keyword">if</span> (entry == <span class="keyword">null</span> &amp;&amp; provider == <span class="keyword">null</span>) {
+        <span class="keyword">throw new</span> IllegalArgumentException(<span class="string">"Cannot resolve model: "</span> + trimmed);
+    }
+
+    <span class="comment">// 步骤 5：创建 Model 实例并返回</span>
+    <span class="keyword">return</span> provider.create(trimmed, context);
+}
+    </div>
+
+    <!-- ==================== 三、SPI 加载 ==================== -->
+    <h2>三、Java SPI 服务加载：loadServiceProviders()</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 通过 Java SPI 加载所有 ModelProvider 实现
+ * 扫描 classpath 中 META-INF/services/ 目录下的配置文件
+ */</span>
+<span class="keyword">private static</span> List&lt;ModelProvider&gt; loadServiceProviders() {
+    <span class="keyword">if</span> (serviceProviders != <span class="keyword">null</span>) <span class="keyword">return</span> serviceProviders;
+
+    <span class="keyword">synchronized</span> (ModelRegistry.class) {
+        <span class="keyword">if</span> (serviceProviders == <span class="keyword">null</span>) {
+            List&lt;ModelProvider&gt; providers = <span class="keyword">new</span> ArrayList&lt;&gt;();
+
+            <span class="comment">// ★ Java SPI 核心 API：ServiceLoader.load()</span>
+            <span class="comment">// 扫描所有 JAR 包中的 META-INF/services/ 目录</span>
+            ServiceLoader&lt;ModelProvider&gt; loader =
+                ServiceLoader.load(ModelProvider.class, classLoader);
+
+            <span class="comment">// 实例化所有配置文件中声明的 Provider 类</span>
+            <span class="keyword">for</span> (ModelProvider provider : loader) {
+                providers.add(provider);
+            }
+
+            serviceProviders = List.copyOf(providers);
+        }
+        <span class="keyword">return</span> serviceProviders;
+    }
+}
+    </div>
+
+    <!-- ==================== 四、匹配过程 ==================== -->
+    <h2>四、Provider 匹配：findServiceProvider()</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * 遍历所有已加载的 Provider，调用 supports() 判断是否匹配
+ */</span>
+<span class="keyword">private static</span> ModelProvider findServiceProvider(String modelId, ModelCreationContext context) {
+    <span class="keyword">for</span> (ModelProvider provider : loadServiceProviders()) {
+        <span class="comment">// 调用每个 Provider 的 supports() 方法</span>
+        <span class="keyword">if</span> (provider.supports(modelId, context)) {
+            <span class="keyword">return</span> provider;  <span class="comment">// 返回第一个匹配的 Provider</span>
+        }
+    }
+    <span class="keyword">return null</span>;
+}
+    </div>
+
+    <!-- ==================== 五、DeepSeekModelProvider ==================== -->
+    <h2>五、DeepSeekModelProvider：匹配与创建</h2>
+
+    <div class="code-block">
+<span class="comment">/**
+ * DeepSeek 模型提供商实现
+ * 通过 SPI 自动发现，匹配 "deepseek:" 前缀的模型 ID
+ */</span>
+<span class="keyword">public final class</span> <span class="class-name">DeepSeekModelProvider</span> <span class="keyword">implements</span> ModelProvider {
+
+    <span class="keyword">private static final</span> String PREFIX = <span class="string">"deepseek:"</span>;       <span class="comment">// ← ID 前缀</span>
+    <span class="keyword">public static final</span> String DEFAULT_BASE_URL = <span class="string">"https://api.deepseek.com"</span>;
+
+    <span class="comment">// ============================================================</span>
+    <span class="comment">// 匹配方法：判断是否支持该 modelId</span>
+    <span class="comment">// ============================================================</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">public boolean</span> supports(String modelId, ModelCreationContext context) {
+        <span class="keyword">return</span> modelId != <span class="keyword">null</span> &amp;&amp; modelId.startsWith(PREFIX);
+    }
+
+    <span class="comment">// ============================================================</span>
+    <span class="comment">// 创建方法：构建 Model 实例</span>
+    <span class="comment">// ============================================================</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> Model create(String modelId, ModelCreationContext context) {
+        String modelName = modelId.substring(PREFIX.length());  <span class="comment">// → "deepseek-v4-flash"</span>
+
+        <span class="keyword">return</span> OpenAIChatModel.builder()
+                .apiKey(System.getenv(<span class="string">"DEEPSEEK_API_KEY"</span>))
+                .baseUrl(DEFAULT_BASE_URL)
+                .modelName(modelName)
+                .build();
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> String providerId() {
+        <span class="keyword">return</span> <span class="string">"deepseek"</span>;  <span class="comment">// 与 ID 前缀保持一致</span>
+    }
+}
+    </div>
+
+    <!-- ==================== 六、SPI 配置文件 ==================== -->
+    <h2>六、SPI 配置文件</h2>
+
+    <p><strong>文件位置：</strong> <code>META-INF/services/io.agentscope.core.model.spi.ModelProvider</code></p>
+    <p><strong>所在 JAR：</strong> <code>agentscope-extensions-model-openai-${version}.jar</code></p>
+
+    <div class="code-block">
+<span class="comment"># META-INF/services/io.agentscope.core.model.spi.ModelProvider</span>
+<span class="comment"># 该文件列出了所有 ModelProvider 实现类</span>
+
+io.agentscope.extensions.model.openai.OpenAIModelProvider
+io.agentscope.extensions.model.openai.compat.kimi.KimiModelProvider
+io.agentscope.extensions.model.openai.compat.minimax.MiniMaxModelProvider
+io.agentscope.extensions.model.openai.compat.glm.GLMModelProvider
+io.agentscope.extensions.model.openai.compat.deepseek.DeepSeekModelProvider  <span class="comment">← 被匹配</span>
+    </div>
+
+    <hr>
+
+    <!-- ==================== 七、完整流程图 ==================== -->
+    <h2>七、完整流程图</h2>
+
+    <div class="flow-chart">
+<span class="step">.model("deepseek:deepseek-v4-flash")</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">ModelRegistry.resolve()  ← 模型 ID 解析入口</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> 1. 查 namedModels（手动注册）→ 无
+    <span class="arrow">├─</span> 2. 查 resolvedCache（缓存）→ 无
+    <span class="arrow">├─</span> 3. findMatchingUserEntry() → 无
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">findServiceProvider()  ← 通过 SPI 查找</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> loadServiceProviders()
+    <span class="arrow">│</span>   <span class="arrow">│</span>
+    <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="highlight">ServiceLoader.load(ModelProvider.class)</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>   <span class="arrow">└─</span> 扫描所有 JAR 的 <span class="highlight">META-INF/services/</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>       <span class="arrow">└─</span> 找到配置文件：<span class="highlight">io.agentscope.core.model.spi.ModelProvider</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>           <span class="arrow">└─</span> 内容包含 5 个 Provider 全限定名
+    <span class="arrow">│</span>   <span class="arrow">│</span>
+    <span class="arrow">│</span>   <span class="arrow">└─</span> 遍历实例化所有 Provider:
+    <span class="arrow">│</span>       <span class="arrow">├─</span> OpenAIModelProvider
+    <span class="arrow">│</span>       <span class="arrow">├─</span> KimiModelProvider
+    <span class="arrow">│</span>       <span class="arrow">├─</span> MiniMaxModelProvider
+    <span class="arrow">│</span>       <span class="arrow">├─</span> GLMModelProvider
+    <span class="arrow">│</span>       <span class="arrow">└─</span> <span class="provider">DeepSeekModelProvider</span>  ← 被加载
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">遍历 Provider，调用 supports() 匹配</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> OpenAIModelProvider.supports()   → false
+    <span class="arrow">├─</span> KimiModelProvider.supports()     → false
+    <span class="arrow">├─</span> MiniMaxModelProvider.supports()  → false
+    <span class="arrow">├─</span> GLMModelProvider.supports()      → false
+    <span class="arrow">└─</span> <span class="match">DeepSeekModelProvider.supports() → true ✅</span>
+        <span class="arrow">│</span>
+        <span class="arrow">▼</span>
+<span class="step">DeepSeekModelProvider.create()</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> 提取 modelName = "deepseek-v4-flash"
+    <span class="arrow">├─</span> 应用 DEFAULT_BASE_URL = "https://api.deepseek.com"
+    <span class="arrow">├─</span> 读取环境变量 DEEPSEEK_API_KEY
+    <span class="arrow">└─</span> 返回 OpenAIChatModel 实例
+    </div>
+
+    <hr>
+
+    <!-- ==================== 八、自定义模型 SPI 实现指南 ==================== -->
+    <h2>八、扩展指南：接入公司自建模型</h2>
+
+    <div class="spi-note">
+        <strong>⚙️ 如果需要接入公司自己搭建的模型（非 OpenAI 兼容格式），需要自行实现 SPI。</strong>
+    </div>
+
+    <h3>步骤 1：实现 ModelProvider 接口</h3>
+
+    <div class="code-block">
+<span class="comment">// 1. 创建自定义 Provider，放在 src/main/java/ 下</span>
+<span class="keyword">package</span> com.yourcompany.agentscope.model;
+
+<span class="keyword">import</span> io.agentscope.core.model.Model;
+<span class="keyword">import</span> io.agentscope.core.model.ModelCreationContext;
+<span class="keyword">import</span> io.agentscope.core.model.spi.ModelProvider;
+
+<span class="keyword">public final class</span> <span class="class-name">MyCompanyModelProvider</span> <span class="keyword">implements</span> ModelProvider {
+
+    <span class="keyword">private static final</span> String PREFIX = <span class="string">"mycomp:"</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public boolean</span> supports(String modelId, ModelCreationContext context) {
+        <span class="keyword">return</span> modelId != <span class="keyword">null</span> &amp;&amp; modelId.startsWith(PREFIX);
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> Model create(String modelId, ModelCreationContext context) {
+        String modelName = modelId.substring(PREFIX.length());
+        <span class="comment">// 返回自定义的 Model 实现</span>
+        <span class="keyword">return</span> MyCompanyChatModel.builder()
+                .apiKey(context.getApiKey())
+                .baseUrl(<span class="string">"https://api.your-company.com"</span>)
+                .modelName(modelName)
+                .build();
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> String providerId() {
+        <span class="keyword">return</span> <span class="string">"mycomp"</span>;
+    }
+}
+    </div>
+
+    <h3>步骤 2：创建 SPI 配置文件</h3>
+
+    <p><strong>文件路径：</strong> <code>src/main/resources/META-INF/services/io.agentscope.core.model.spi.ModelProvider</code></p>
+
+    <div class="code-block">
+<span class="comment"># 文件内容：写入你的 Provider 全限定类名</span>
+com.yourcompany.agentscope.model.MyCompanyModelProvider
+    </div>
+
+    <h3>步骤 3：使用自定义模型</h3>
+
+    <div class="code-block">
+<span class="comment">// 通过模型 ID 加载公司自建模型</span>
+HarnessAgent agent = HarnessAgent.builder()
+        .name(<span class="string">"myAgent"</span>)
+        .model(<span class="string">"mycomp:my-model-name"</span>)  <span class="comment">// ← 使用自定义前缀</span>
+        .build();
+    </div>
+
+    <div class="definition-box">
+        <strong>📌 关键点：</strong>
+        <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+            <li><strong>providerId()</strong> 必须与 ID 前缀保持一致（如 <code>"mycomp"</code>）</li>
+            <li><strong>supports()</strong> 方法通过前缀匹配来决定是否处理该模型 ID</li>
+            <li><strong>SPI 配置文件</strong> 必须放在 <code>META-INF/services/</code> 目录下，文件名必须是接口全限定名</li>
+            <li>打包成 JAR 后，<code>META-INF/services/</code> 目录会被一同打包，<code>ServiceLoader</code> 自动发现</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <!-- ==================== 九、模型 ID 映射表 ==================== -->
+    <h2>九、模型 ID 映射表</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>模型 ID 前缀</th>
+                <th>匹配的 Provider</th>
+                <th>默认 Base URL</th>
+                <th>所需环境变量</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>deepseek:</code></td>
+                <td><code>DeepSeekModelProvider</code></td>
+                <td><code>https://api.deepseek.com</code></td>
+                <td><code>DEEPSEEK_API_KEY</code></td>
+            </tr>
+            <tr>
+                <td><code>openai:</code></td>
+                <td><code>OpenAIModelProvider</code></td>
+                <td><code>https://api.openai.com</code></td>
+                <td><code>OPENAI_API_KEY</code></td>
+            </tr>
+            <tr>
+                <td><code>kimi:</code></td>
+                <td><code>KimiModelProvider</code></td>
+                <td>月之暗面默认地址</td>
+                <td><code>KIMI_API_KEY</code></td>
+            </tr>
+            <tr>
+                <td><code>minimax:</code></td>
+                <td><code>MiniMaxModelProvider</code></td>
+                <td>MiniMax 默认地址</td>
+                <td><code>MINIMAX_API_KEY</code></td>
+            </tr>
+            <tr>
+                <td><code>glm:</code></td>
+                <td><code>GLMModelProvider</code></td>
+                <td>智谱默认地址</td>
+                <td><code>GLM_API_KEY</code></td>
+            </tr>
+            <tr style="background: #fefce8;">
+                <td><code>mycomp:</code> <span class="tag tag-purple">自定义</span></td>
+                <td><code>MyCompanyModelProvider</code></td>
+                <td>公司内部 API 地址</td>
+                <td>自定义环境变量</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ==================== 十、核心类汇总 ==================== -->
+    <h2>十、核心源码类</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>类名</th>
+                <th>路径</th>
+                <th>作用</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>ModelRegistry</code></td>
+                <td><code>io.agentscope.core.model.ModelRegistry</code></td>
+                <td>模型注册与解析入口，通过 SPI 加载 Provider</td>
+            </tr>
+            <tr>
+                <td><code>ModelProvider</code></td>
+                <td><code>io.agentscope.core.model.spi.ModelProvider</code></td>
+                <td>SPI 接口，所有模型提供商必须实现</td>
+            </tr>
+            <tr>
+                <td><code>DeepSeekModelProvider</code></td>
+                <td><code>io.agentscope.extensions.model.openai.compat.deepseek</code></td>
+                <td>DeepSeek 专属 Provider，匹配 <code>deepseek:</code></td>
+            </tr>
+            <tr>
+                <td><code>OpenAIChatModel</code></td>
+                <td><code>io.agentscope.extensions.model.openai</code></td>
+                <td>OpenAI 兼容模型的实现，发送 HTTP 请求</td>
+            </tr>
+            <tr>
+                <td><code>ServiceLoader</code></td>
+                <td><code>java.util.ServiceLoader</code></td>
+                <td>Java 标准 SPI 加载器，扫描 <code>META-INF/services/</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ==================== 十一、术语总结 ==================== -->
+    <h2>十一、术语总结</h2>
+
+    <div class="summary-grid">
+        <div class="item">
+            <div class="label">加载方式名称</div>
+            <div class="value">模型 ID 加载 · SPI 服务发现</div>
+        </div>
+        <div class="item">
+            <div class="label">核心机制</div>
+            <div class="value">Java SPI + ModelRegistry</div>
+        </div>
+        <div class="item">
+            <div class="label">配置位置</div>
+            <div class="value">META-INF/services/</div>
+        </div>
+        <div class="item">
+            <div class="label">匹配方法</div>
+            <div class="value">provider.supports(modelId)</div>
+        </div>
+        <div class="item">
+            <div class="label">创建方法</div>
+            <div class="value">provider.create(modelId, context)</div>
+        </div>
+        <div class="item">
+            <div class="label">自定义扩展</div>
+            <div class="value">实现 ModelProvider + SPI 配置</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 13px; text-align: center;">
+        AgentScope 模型 ID 加载机制 · SPI 服务发现流程详解
+    </div>
+
+</div>
+
+</body>
+</html>

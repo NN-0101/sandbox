@@ -1,0 +1,8 @@
+spring:
+  config:
+    activate:
+      # 指定当前生效的配置文件
+      on-profile: dev
+    #显式导入外部配置 Nacos
+    import:
+      - optional:nacos:${spring.application.name}-${spring.config.activate.on-profile}.${spring.cloud.nacos.config.file-extension}

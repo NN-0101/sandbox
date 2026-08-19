@@ -15,6 +15,7 @@
         <module>sandbox-demo</module>
         <module>sandbox-home</module>
         <module>sandbox-ai</module>
+        <module>sandbox-agent-scope</module>
     </modules>
 
     <parent>
@@ -45,8 +46,12 @@
         <!-- 核心框架版本 End -->
 
         <!-- Spring AI 版本 Begin -->
-        <spring-ai-bom.version>1.1.5</spring-ai-bom.version>
+        <spring-ai-bom.version>1.1.8</spring-ai-bom.version>
         <!-- Spring AI 版本 End -->
+
+        <!-- Agent Scope 版本 Begin -->
+        <agentscope.version>2.0.1</agentscope.version>
+        <!-- Agent Scope 版本 Begin -->
 
         <!-- Spring Security 版本 Begin -->
         <spring-security-oauth2-authorization-server.version>1.4.3</spring-security-oauth2-authorization-server.version>
@@ -109,6 +114,19 @@
                 <scope>import</scope>
             </dependency>
             <!-- Spring AI End -->
+
+            <!-- Agent Scope Begin -->
+            <dependency>
+                <groupId>io.agentscope</groupId>
+                <artifactId>agentscope-harness</artifactId>
+                <version>${agentscope.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.agentscope</groupId>
+                <artifactId>agentscope-extensions-model-openai</artifactId>
+                <version>${agentscope.version}</version>
+            </dependency>
+            <!-- Agent Scope End -->
 
             <!-- Spring Cloud Begin -->
             <dependency>
@@ -290,6 +308,10 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
