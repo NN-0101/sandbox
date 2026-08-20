@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentScope 消息与事件 · 内容块与流式通信</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f6f8fa;
+            color: #1e293b;
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 48px 56px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 16px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 28px;
+        }
+
+        .definition-box {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .definition-box strong {
+            color: #0f172a;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-left: 14px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            margin: 14px 0 22px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+        .code-block .keyword {
+            color: #c084fc;
+        }
+        .code-block .string {
+            color: #34d399;
+        }
+        .code-block .annotation {
+            color: #fbbf24;
+        }
+        .code-block .class-name {
+            color: #60a5fa;
+        }
+        .code-block .method {
+            color: #f472b6;
+        }
+        .code-block .number {
+            color: #fbbf24;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-right: 4px;
+        }
+
+        .tag-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .tag-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .tag-purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        .tag-orange {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .tag-pink {
+            background: #fce7f3;
+            color: #be185d;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 36px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table tr:hover {
+            background: #f8fafc;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0 22px 0;
+        }
+
+        .grid-2col .card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px 20px;
+            border: 1px solid #e2e8f0;
+            border-top: 4px solid #3b82f6;
+        }
+
+        .grid-2col .card.purple {
+            border-top-color: #7c3aed;
+        }
+        .grid-2col .card.green {
+            border-top-color: #16a34a;
+        }
+
+        .grid-2col .card .card-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .grid-2col .card ul {
+            padding-left: 18px;
+            font-size: 14px;
+        }
+
+        .grid-2col .card li {
+            margin-bottom: 4px;
+        }
+
+        .flow-chart {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 18px 0 24px 0;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 2;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .flow-chart .arrow {
+            color: #94a3b8;
+        }
+        .flow-chart .step {
+            color: #0f172a;
+        }
+        .flow-chart .highlight {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .flow-chart .event {
+            color: #7c3aed;
+        }
+        .flow-chart .block {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .spi-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 16px 0 22px 0;
+        }
+
+        .spi-note strong {
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 18px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+            .code-block {
+                font-size: 12px;
+                padding: 14px;
+            }
+            .flow-chart {
+                font-size: 12px;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>📨 消息（Message）与事件（Event）</h1>
+    <p class="subtitle">内容块（ContentBlock）· 流式通信 · 从前端到后端的完整数据链路</p>
+
+    <div class="definition-box">
+        <strong>📌 核心概念：</strong>
+        <strong>消息（Message）</strong> 是智能体间通信与持久化的基本单元，代表一个完整的对话轮次；
+        <strong>事件（Event）</strong> 是流式传输的基本单元，携带增量进度更新。
+        <strong>内容块（ContentBlock）</strong> 是消息内部的结构化“零件”，承载文本、图片、工具调用等各类数据。
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 一、消息与事件概览 -->
+    <!-- ============================================================ -->
+    <h2>一、消息与事件概览</h2>
+
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-title">📦 消息（Message）</div>
+            <ul>
+                <li><strong>代表：</strong>完整的对话轮次（用户输入 / 助手回复 / 系统指令）</li>
+                <li><strong>核心类：</strong><code>Msg</code>（位于 <code>io.agentscope.core.message</code>）</li>
+                <li><strong>内容：</strong>由有序的 <code>ContentBlock</code> 列表组成</li>
+                <li><strong>特点：</strong>完整、持久化、可存储</li>
+                <li><strong>角色：</strong><code>USER</code> / <code>ASSISTANT</code> / <code>SYSTEM</code> / <code>TOOL</code></li>
+            </ul>
+        </div>
+        <div class="card purple">
+            <div class="card-title">⚡ 事件（Event）</div>
+            <ul>
+                <li><strong>代表：</strong>增量进度更新（文本 token、工具调用片段）</li>
+                <li><strong>核心类：</strong><code>AgentEvent</code>（位于 <code>io.agentscope.core.event</code>）</li>
+                <li><strong>模式：</strong><code>Start → Delta × N → End</code></li>
+                <li><strong>特点：</strong>轻量、实时、可流式传输</li>
+                <li><strong>用途：</strong>驱动实时界面、人工介入工作流</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 二、消息（Message）详解 -->
+    <!-- ============================================================ -->
+    <h2>二、消息（Message）详解</h2>
+
+    <h3>2.1 核心字段</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>方法</th>
+                <th>类型</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>getId()</code></td><td><code>String</code></td><td>唯一消息标识符</td></tr>
+            <tr><td><code>getName()</code></td><td><code>String</code></td><td>发送方名称（可空）</td></tr>
+            <tr><td><code>getRole()</code></td><td><code>MsgRole</code></td><td><code>USER</code> / <code>ASSISTANT</code> / <code>SYSTEM</code> / <code>TOOL</code></td></tr>
+            <tr><td><code>getContent()</code></td><td><code>List&lt;ContentBlock&gt;</code></td><td>有序内容块列表（不可变）</td></tr>
+            <tr><td><code>getMetadata()</code></td><td><code>Map&lt;String, Object&gt;</code></td><td>任意键值元数据</td></tr>
+            <tr><td><code>getUsage()</code></td><td><code>ChatUsage</code></td><td>Token 用量（仅 assistant 消息）</td></tr>
+        </tbody>
+    </table>
+
+    <h3>2.2 内容块（ContentBlock）类型</h3>
+    <p>消息内容由类型化的块组成，每种块代表一类独立信息。块类位于 <code>io.agentscope.core.message</code>。</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>块类型</th>
+                <th>说明</th>
+                <th>允许出现在</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>TextBlock</code></td><td>纯文本内容</td><td>USER、ASSISTANT、SYSTEM</td></tr>
+            <tr><td><code>DataBlock</code></td><td>二进制数据（图片/音频/视频），通过 base64 或 URL</td><td>USER、ASSISTANT</td></tr>
+            <tr><td><code>ThinkingBlock</code></td><td>模型推理过程（思维链）</td><td>ASSISTANT</td></tr>
+            <tr><td><code>ToolUseBlock</code></td><td>工具调用，包含 id / name / input / state</td><td>ASSISTANT</td></tr>
+            <tr><td><code>ToolResultBlock</code></td><td>工具执行结果，包含 state</td><td>ASSISTANT</td></tr>
+            <tr><td><code>HintBlock</code></td><td>以用户上下文形式注入循环的指令</td><td>ASSISTANT</td></tr>
+        </tbody>
+    </table>
+
+    <div class="spi-note">
+        <strong>📌 角色约束：</strong> USER 消息只能包含 text/data/image/audio/video 块；SYSTEM 消息只能包含 TextBlock；ASSISTANT 消息可包含所有块类型。
+    </div>
+
+    <h3>2.3 创建消息示例</h3>
+    <div class="code-block">
+<span class="comment">// 导入核心类</span>
+<span class="keyword">import</span> io.agentscope.core.message.AssistantMessage;
+<span class="keyword">import</span> io.agentscope.core.message.UserMessage;
+<span class="keyword">import</span> io.agentscope.core.message.SystemMessage;
+<span class="keyword">import</span> io.agentscope.core.message.TextBlock;
+<span class="keyword">import</span> io.agentscope.core.message.DataBlock;
+<span class="keyword">import</span> io.agentscope.core.message.Base64Source;
+
+<span class="comment">// 1. 用户消息 —— 纯文本</span>
+UserMessage userText = <span class="keyword">new</span> UserMessage(<span class="string">"user"</span>, <span class="string">"这张图片里有什么？"</span>);
+
+<span class="comment">// 2. 用户消息 —— 多模态（文本 + 图片）</span>
+UserMessage userMulti =
+        <span class="keyword">new</span> UserMessage(
+                <span class="string">"user"</span>,
+                TextBlock.builder().text(<span class="string">"描述这张图片："</span>).build(),
+                DataBlock.builder()
+                        .source(Base64Source.builder()
+                                .data(<span class="string">"..."</span>)
+                                .mediaType(<span class="string">"image/png"</span>)
+                                .build())
+                        .build());
+
+<span class="comment">// 3. 系统消息 —— 仅文本</span>
+SystemMessage systemMsg = <span class="keyword">new</span> SystemMessage(<span class="string">"system"</span>, <span class="string">"你是一个有用的助手。"</span>);
+
+<span class="comment">// 4. 助手消息 —— 允许所有块类型</span>
+AssistantMessage assistantMsg = <span class="keyword">new</span> AssistantMessage(<span class="string">"agent"</span>, <span class="string">"结果如下..."</span>);
+
+<span class="comment">// 5. 使用 Builder 添加可选字段</span>
+UserMessage msg =
+        UserMessage.builder()
+                .name(<span class="string">"user"</span>)
+                .textContent(<span class="string">"Hello"</span>)
+                .metadata(<span class="string">"sessionId"</span>, <span class="string">"abc-123"</span>)
+                .build();
+    </div>
+
+    <h3>2.4 访问内容块</h3>
+    <div class="code-block">
+<span class="comment">// 获取所有文本内容</span>
+String text = msg.getTextContent();
+
+<span class="comment">// 获取所有工具调用块</span>
+List&lt;ToolUseBlock&gt; toolCalls = msg.getContentBlocks(ToolUseBlock.class);
+
+<span class="comment">// 检查是否包含工具结果</span>
+<span class="keyword">if</span> (msg.hasContentBlocks(ToolResultBlock.class)) {
+    <span class="comment">// 处理工具返回的结果</span>
+    List&lt;ToolResultBlock&gt; results = msg.getContentBlocks(ToolResultBlock.class);
+}
+
+<span class="comment">// 获取第一个 DataBlock（如图片）</span>
+DataBlock firstData = msg.getFirstContentBlock(DataBlock.class);
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 三、事件（Event）与流式处理 -->
+    <!-- ============================================================ -->
+    <h2>三、事件（Event）与流式处理</h2>
+
+    <h3>3.1 事件生命周期</h3>
+    <p>每个事件都携带 <code>getReplyId()</code>，将其关联到正在构建的消息。事件遵循 <strong>start → delta → end</strong> 模式。</p>
+
+    <div class="flow-chart">
+<span class="step">Agent 开始处理</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="event">AgentStartEvent</span>  <span class="comment">// 智能体开始新的回复</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> <span class="event">ModelCallStartEvent</span>  <span class="comment">// 模型调用开始</span>
+    <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="block">TextBlockStartEvent</span>  <span class="comment">// 文本块开始 (blockId)</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="event">TextBlockDeltaEvent</span>  (×N)  <span class="comment">// 增量文本</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>   <span class="arrow">└─</span> <span class="block">TextBlockEndEvent</span>    <span class="comment">// 文本块结束</span>
+    <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="block">ToolCallStartEvent</span>   <span class="comment">// 工具调用开始 (toolCallId)</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="event">ToolCallDeltaEvent</span>  (×N)  <span class="comment">// 增量参数</span>
+    <span class="arrow">│</span>   <span class="arrow">│</span>   <span class="arrow">└─</span> <span class="block">ToolCallEndEvent</span>     <span class="comment">// 工具调用结束</span>
+    <span class="arrow">│</span>   <span class="arrow">└─</span> <span class="event">ModelCallEndEvent</span>    <span class="comment">// 模型调用结束</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> <span class="event">ToolResultStartEvent</span>   <span class="comment">// 工具结果开始</span>
+    <span class="arrow">│</span>   <span class="arrow">├─</span> <span class="event">ToolResultTextDeltaEvent</span>  (×N)  <span class="comment">// 增量文本结果</span>
+    <span class="arrow">│</span>   <span class="arrow">└─</span> <span class="block">ToolResultEndEvent</span>     <span class="comment">// 工具结果结束</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="event">AgentEndEvent</span>  <span class="comment">// 智能体完成回复</span>
+    </div>
+
+    <h3>3.2 常用事件类型</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>事件类型</th>
+                <th>说明</th>
+                <th>关键字段</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>AgentStartEvent</code></td><td>智能体开始新回复</td><td><code>replyId</code>, <code>sessionId</code></td></tr>
+            <tr><td><code>AgentEndEvent</code></td><td>智能体完成回复</td><td><code>replyId</code></td></tr>
+            <tr><td><code>TextBlockDeltaEvent</code></td><td>增量文本内容到达</td><td><code>replyId</code>, <code>blockId</code>, <code>delta</code></td></tr>
+            <tr><td><code>ThinkingBlockDeltaEvent</code></td><td>增量思维链内容</td><td><code>replyId</code>, <code>blockId</code>, <code>delta</code></td></tr>
+            <tr><td><code>DataBlockDeltaEvent</code></td><td>二进制数据增量（图片/音频）</td><td><code>replyId</code>, <code>blockId</code>, <code>data</code>, <code>mediaType</code></td></tr>
+            <tr><td><code>ToolCallStartEvent</code></td><td>工具调用开始</td><td><code>replyId</code>, <code>toolCallId</code>, <code>toolCallName</code></td></tr>
+            <tr><td><code>ToolResultEndEvent</code></td><td>工具执行完成</td><td><code>replyId</code>, <code>toolCallId</code>, <code>state</code></td></tr>
+            <tr><td><code>RequireUserConfirmEvent</code></td><td>等待用户确认</td><td><code>replyId</code>, <code>toolCalls</code></td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 四、从事件流重建消息 -->
+    <!-- ============================================================ -->
+    <h2>四、从事件流重建消息</h2>
+
+    <div class="definition-box">
+        <strong>🔁 核心设计：</strong> 事件与消息是同一数据的两种视图。<code>streamEvents</code> 产出的事件流可以按 <code>replyId</code> / <code>blockId</code> / <code>toolCallId</code> 聚合，还原成完整的 <code>AssistantMessage</code>。
+    </div>
+
+    <h3>4.1 服务端：流式输出事件</h3>
+    <div class="code-block">
+<span class="keyword">import</span> io.agentscope.core.event.*;
+<span class="keyword">import</span> io.agentscope.core.message.UserMessage;
+
+<span class="comment">// 创建用户消息</span>
+UserMessage userMsg = <span class="keyword">new</span> UserMessage(<span class="string">"user"</span>, <span class="string">"帮我修复这个 bug"</span>);
+
+<span class="comment">// 流式处理事件</span>
+agent.streamEvents(userMsg)
+        .doOnNext(event -> {
+            <span class="keyword">if</span> (event <span class="keyword">instanceof</span> AgentStartEvent start) {
+                System.out.println(<span class="string">"[开始] replyId="</span> + start.getReplyId());
+            } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> TextBlockDeltaEvent delta) {
+                System.out.print(delta.getDelta());  <span class="comment">// 逐字打印</span>
+            } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> ToolCallStartEvent tc) {
+                System.out.println(<span class="string">"\n[调用工具] "</span> + tc.getToolCallName());
+            } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> ToolResultEndEvent end) {
+                System.out.println(<span class="string">"[工具完成] "</span> + end.getState());
+            } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> AgentEndEvent end) {
+                System.out.println(<span class="string">"\n[完成]"</span>);
+            }
+        })
+        .blockLast();  <span class="comment">// 阻塞等待流结束</span>
+    </div>
+
+    <h3>4.2 前端（客户端）：重建消息</h3>
+    <div class="code-block">
+<span class="comment">// 前端模拟：按 replyId 聚合事件，重建内容块</span>
+<span class="keyword">class</span> <span class="class-name">MessageReconstructor</span> {
+    <span class="keyword">private final</span> Map&lt;String, StringBuilder&gt; textBuffers = <span class="keyword">new</span> HashMap&lt;&gt;();
+    <span class="keyword">private final</span> Map&lt;String, List&lt;ContentBlock&gt;&gt; blocks = <span class="keyword">new</span> HashMap&lt;&gt;();
+
+    <span class="keyword">public void</span> onEvent(AgentEvent event) {
+        String replyId = event.getReplyId();
+
+        <span class="keyword">if</span> (event <span class="keyword">instanceof</span> TextBlockDeltaEvent delta) {
+            textBuffers.computeIfAbsent(replyId, k -> <span class="keyword">new</span> StringBuilder())
+                       .append(delta.getDelta());
+        } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> TextBlockEndEvent) {
+            <span class="comment">// 文本块完成，保存到 blocks 中</span>
+            String fullText = textBuffers.get(replyId).toString();
+            blocks.computeIfAbsent(replyId, k -> <span class="keyword">new</span> ArrayList&lt;&gt;())
+                  .add(TextBlock.builder().text(fullText).build());
+        } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> ToolCallStartEvent tc) {
+            <span class="comment">// 工具调用开始，创建占位</span>
+            System.out.println(<span class="string">"工具调用开始: "</span> + tc.getToolCallName());
+        } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> ToolResultEndEvent end) {
+            <span class="comment">// 工具结果完成，保存结果块</span>
+            blocks.computeIfAbsent(replyId, k -> <span class="keyword">new</span> ArrayList&lt;&gt;())
+                  .add(ToolResultBlock.builder().state(end.getState()).build());
+        } <span class="keyword">else if</span> (event <span class="keyword">instanceof</span> AgentEndEvent) {
+            <span class="comment">// 整个回复完成，可以组装完整的 AssistantMessage</span>
+            AssistantMessage fullMsg = AssistantMessage.builder()
+                    .id(replyId)
+                    .content(blocks.get(replyId))
+                    .build();
+            <span class="comment">// 渲染到 UI</span>
+            renderMessage(fullMsg);
+        }
+    }
+}
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 五、完整流程：从用户请求到前端渲染 -->
+    <!-- ============================================================ -->
+    <h2>五、完整数据流：从用户请求到前端渲染</h2>
+
+    <div class="flow-chart">
+<span class="step">用户请求</span>  <span class="comment">// "今天天气怎么样，并生成一张晴天的图片"</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">Agent 处理</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> 模型推理 → <span class="block">TextBlock</span> <span class="comment">// "好的，正在为您查询..."</span>
+    <span class="arrow">├─</span> 工具调用 → <span class="block">ToolUseBlock</span> <span class="comment">// query_weather({city: "北京"})</span>
+    <span class="arrow">├─</span> 工具结果 → <span class="block">ToolResultBlock</span> <span class="comment">// {temp: "28°C", weather: "晴"}</span>
+    <span class="arrow">├─</span> 工具调用 → <span class="block">ToolUseBlock</span> <span class="comment">// generate_image({prompt: "晴朗的天空"})</span>
+    <span class="arrow">├─</span> 工具结果 → <span class="block">ToolResultBlock</span> <span class="comment">// 图片 Base64 数据</span>
+    <span class="arrow">└─</span> 最终回复 → <span class="block">TextBlock</span> + <span class="block">DataBlock</span> <span class="comment">// "这是图片：" + 图片数据</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">流式事件输出</span>  <span class="comment">// 拆分为 Start → Delta × N → End 事件</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├─</span> <span class="event">TextBlockStartEvent</span> → <span class="event">DeltaEvent</span> (×N) → <span class="event">TextBlockEndEvent</span>
+    <span class="arrow">├─</span> <span class="event">ToolCallStartEvent</span> → <span class="event">DeltaEvent</span> (×N) → <span class="event">ToolCallEndEvent</span>
+    <span class="arrow">├─</span> <span class="event">ToolResultStartEvent</span> → <span class="event">DeltaEvent</span> (×N) → <span class="event">ToolResultEndEvent</span>
+    <span class="arrow">└─</span> <span class="event">AgentEndEvent</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span>
+<span class="step">前端重建消息</span>  <span class="comment">// 按 replyId / blockId 聚合</span>
+    <span class="arrow">│</span>
+    <span class="arrow">└─</span> 还原为完整的 <span class="highlight">AssistantMessage</span>
+        <span class="arrow">└─</span> 包含所有 <span class="block">ContentBlock</span>：TextBlock、ToolUseBlock、ToolResultBlock、DataBlock
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 六、内容块与前端渲染映射 -->
+    <!-- ============================================================ -->
+    <h2>六、内容块与前端渲染映射</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>内容块类型</th>
+                <th>前端渲染方式</th>
+                <th>示例</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>TextBlock</code></td>
+                <td>直接显示为文本段落</td>
+                <td>"今天天气晴朗，气温 28°C"</td>
+            </tr>
+            <tr>
+                <td><code>DataBlock</code> (图片)</td>
+                <td><code>&lt;img src="data:image/png;base64,..." /&gt;</code></td>
+                <td>显示生成的晴天图片</td>
+            </tr>
+            <tr>
+                <td><code>ThinkingBlock</code></td>
+                <td>折叠/可展开的思考过程</td>
+                <td>"<span style="color:#94a3b8;">[思考] 用户想要天气和图片...</span>"</td>
+            </tr>
+            <tr>
+                <td><code>ToolUseBlock</code></td>
+                <td>工具调用卡片（名称 + 参数）</td>
+                <td>🔧 <code>query_weather</code> { "city": "北京" }</td>
+            </tr>
+            <tr>
+                <td><code>ToolResultBlock</code></td>
+                <td>工具结果卡片（成功/失败 + 数据）</td>
+                <td>✅ 查询结果：温度 28°C，天气 晴</td>
+            </tr>
+            <tr>
+                <td><code>HintBlock</code></td>
+                <td>系统提示/引导信息</td>
+                <td>💡 提示：你可以继续追问细节</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 七、核心类汇总 -->
+    <!-- ============================================================ -->
+    <h2>七、核心类汇总</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>类名</th>
+                <th>路径</th>
+                <th>作用</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>Msg</code></td><td><code>io.agentscope.core.message</code></td><td>消息基类，包含内容块列表</td></tr>
+            <tr><td><code>ContentBlock</code></td><td><code>io.agentscope.core.message</code></td><td>内容块接口，所有块类型的父类</td></tr>
+            <tr><td><code>TextBlock</code> / <code>DataBlock</code> / <code>ThinkingBlock</code></td><td><code>io.agentscope.core.message</code></td><td>具体内容块实现</td></tr>
+            <tr><td><code>ToolUseBlock</code> / <code>ToolResultBlock</code></td><td><code>io.agentscope.core.message</code></td><td>工具调用与结果块</td></tr>
+            <tr><td><code>AgentEvent</code></td><td><code>io.agentscope.core.event</code></td><td>事件基类，所有事件继承自它</td></tr>
+            <tr><td><code>TextBlockDeltaEvent</code> / <code>ToolCallStartEvent</code> 等</td><td><code>io.agentscope.core.event</code></td><td>各类具体事件</td></tr>
+            <tr><td><code>UserMessage</code> / <code>AssistantMessage</code> / <code>SystemMessage</code></td><td><code>io.agentscope.core.message</code></td><td>按角色划分的消息子类</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 八、关键设计理念总结 -->
+    <!-- ============================================================ -->
+    <h2>八、关键设计理念</h2>
+
+    <div class="grid-2col">
+        <div class="card green">
+            <div class="card-title">✅ 内容块是“通用数据语言”</div>
+            <ul>
+                <li>无论是文本、图片、工具调用还是思考过程，都统一为 <code>ContentBlock</code></li>
+                <li>消息由有序的块列表组成，结构清晰</li>
+                <li>前端可以根据块类型灵活渲染</li>
+            </ul>
+        </div>
+        <div class="card purple">
+            <div class="card-title">✅ 事件流保证状态可恢复</div>
+            <ul>
+                <li>事件记录了完整的构建过程（Start → Delta → End）</li>
+                <li>即使连接中断，重放事件流即可精确重建消息</li>
+                <li>适用于 SSE / WebSocket 等流式场景</li>
+            </ul>
+        </div>
+        <div class="card" style="border-top-color: #f59e0b;">
+            <div class="card-title">✅ 前端后端职责分离</div>
+            <ul>
+                <li>后端：生成事件流，不关心渲染</li>
+                <li>前端：消费事件流，重建消息并渲染</li>
+                <li>中间通过 <code>replyId</code> / <code>blockId</code> / <code>toolCallId</code> 关联</li>
+            </ul>
+        </div>
+        <div class="card" style="border-top-color: #ef4444;">
+            <div class="card-title">✅ 支持人工介入（HITL）</div>
+            <ul>
+                <li><code>RequireUserConfirmEvent</code> 等事件支持人工审批</li>
+                <li>工具调用可以被用户确认或拒绝</li>
+                <li>事件流天然支持异步交互</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ============================================================ -->
+    <!-- 九、快速对照表 -->
+    <!-- ============================================================ -->
+    <h2>九、快速对照表</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>概念</th>
+                <th>后端视角</th>
+                <th>前端视角</th>
+                <th>传输形态</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>消息</strong></td>
+                <td>完整的 <code>Msg</code> 对象</td>
+                <td>重建后的完整对话轮次</td>
+                <td>存储 / 持久化</td>
+            </tr>
+            <tr>
+                <td><strong>内容块</strong></td>
+                <td><code>ContentBlock</code> 列表</td>
+                <td>渲染为 UI 组件（文本、图片、卡片）</td>
+                <td>消息内部结构</td>
+            </tr>
+            <tr>
+                <td><strong>事件</strong></td>
+                <td>流式输出 <code>AgentEvent</code></td>
+                <td>接收增量更新，实时渲染</td>
+                <td>SSE / WebSocket 流</td>
+            </tr>
+            <tr>
+                <td><strong>关联键</strong></td>
+                <td><code>replyId</code> / <code>blockId</code> / <code>toolCallId</code></td>
+                <td>用于聚合事件，重建消息</td>
+                <td>事件字段</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 13px; text-align: center;">
+        AgentScope 消息与事件 · 内容块与流式通信完整指南
+    </div>
+
+</div>
+
+</body>
+</html>
