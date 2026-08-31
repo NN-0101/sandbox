@@ -1,4 +1,4 @@
-package com.sandbox.agentscope.controller;
+package com.sandbox.agentscope.controller.demo;
 
 import com.sandbox.agentscope.tool.TimeTools;
 import io.agentscope.core.ReActAgent;
@@ -6,7 +6,6 @@ import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.event.AgentEventType;
 import io.agentscope.core.event.TextBlockDeltaEvent;
 import io.agentscope.core.event.ToolCallStartEvent;
-import io.agentscope.core.permission.AdditionalWorkingDirectory;
 import io.agentscope.core.permission.PermissionContextState;
 import io.agentscope.core.permission.PermissionMode;
 import io.agentscope.core.tool.Toolkit;

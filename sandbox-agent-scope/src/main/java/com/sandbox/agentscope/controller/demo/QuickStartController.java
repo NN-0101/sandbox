@@ -1,4 +1,4 @@
-package com.sandbox.agentscope.controller;
+package com.sandbox.agentscope.controller.demo;
 
 import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.event.AgentEventType;
