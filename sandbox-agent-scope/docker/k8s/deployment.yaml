@@ -1,0 +1,154 @@
+# ============================================================
+# 1. Deployment 配置（定义如何部署和管理 Pod）
+# ============================================================
+apiVersion: apps/v1           # 使用的 K8s API 版本（apps/v1 是稳定的工作负载 API）
+kind: Deployment              # 资源类型：Deployment（管理无状态应用的控制器）
+metadata:                     # 元数据
+  name: sandbox-agent         # Deployment 的名称
+  namespace: default          # 所属的命名空间（default 是默认命名空间）
+  labels:                     # 标签（用于筛选和关联）
+    app: sandbox-agent        # 标签键值对：app=sandbox-agent
+
+# ============================================================
+# 2. Deployment 规格（期望状态）
+# ============================================================
+spec:
+  replicas: 1                 # 期望运行的 Pod 副本数（1 个）
+  
+  selector:                   # 选择器（Deployment 通过标签选择管理的 Pod）
+    matchLabels:              # 匹配标签规则
+      app: sandbox-agent      # 必须匹配 app=sandbox-agent 的 Pod
+  
+  # ============================================================
+  # 3. Pod 模板（定义 Pod 的配置）
+  # ============================================================
+  template:
+    metadata:
+      labels:                 # Pod 的标签（必须匹配上面的 selector）
+        app: sandbox-agent    # 标签：app=sandbox-agent
+    
+    # ============================================================
+    # 4. Pod 规格（定义容器配置）
+    # ============================================================
+    spec:
+      containers:             # 容器列表
+        - name: sandbox-agent # 容器名称
+          
+          # ---------- 镜像配置 ----------
+          image: registry.cn-hangzhou.aliyuncs.com/nn-0101/sandbox:agent-scope-latest
+          # 镜像地址（阿里云容器镜像服务）
+          # registry.cn-hangzhou.aliyuncs.com   = 阿里云镜像仓库地址
+          # nn-0101                              = 命名空间
+          # sandbox                              = 镜像名称
+          # agent-scope-latest                   = 镜像标签（版本）
+          
+          imagePullPolicy: Always
+          # 镜像拉取策略：
+          # Always   = 每次都拉取最新镜像（适合开发/测试）
+          # IfNotPresent = 本地有就用本地，没有才拉取
+          # Never    = 只使用本地镜像
+          
+          # ---------- 端口配置 ----------
+          ports:
+            - containerPort: 1013    # 容器监听的端口（应用端口）
+              name: http             # 端口的名称（方便引用）
+          
+          # ---------- 环境变量 ----------
+          env:
+            # 1. DEEPSEEK_API_KEY：DeepSeek API 密钥（从 Secret 读取）
+            - name: DEEPSEEK_API_KEY
+              valueFrom:              # 从其他资源获取值
+                secretKeyRef:         # 从 Secret 获取
+                  name: deepseek-credentials  # Secret 名称
+                  key: api-key                 # Secret 中的 key
+            
+            # 2. PROFILES_ACTIVE：Spring Boot 激活的 Profile
+            - name: PROFILES_ACTIVE
+              value: "prod"           # 直接设置值（prod 表示生产环境）
+            
+            # 3. AGENTSCOPE_OPENAI_API_KEY：OpenAI API Key（Spring Boot 配置）
+            # Spring Boot 会自动将环境变量转换为配置
+            # 例如：AGENTSCOPE_OPENAI_API_KEY → agentscope.openai.api-key
+            - name: AGENTSCOPE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: deepseek-credentials
+                  key: api-key
+            
+            # 4. AGENTSCOPE_OPENAI_BASE_URL：OpenAI API 基础 URL
+            # Spring Boot 配置：agentscope.openai.base-url
+            - name: AGENTSCOPE_OPENAI_BASE_URL
+              value: "https://api.deepseek.com"
+            
+            # 5. AGENTSCOPE_OPENAI_MODEL_NAME：模型名称
+            # Spring Boot 配置：agentscope.openai.model-name
+            - name: AGENTSCOPE_OPENAI_MODEL_NAME
+              value: "deepseek-v4-flash"
+            
+            # 6. AGENTSCOPE_OPENAI_STREAM：是否启用流式输出
+            # Spring Boot 配置：agentscope.openai.stream
+            - name: AGENTSCOPE_OPENAI_STREAM
+              value: "true"
+            
+            # 7. JVM：JVM 启动参数（覆盖 Dockerfile 中的配置）
+            - name: JVM
+              value: "-Xms512m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
+              # -Xms512m          = JVM 初始堆内存 512MB
+              # -Xmx512m          = JVM 最大堆内存 512MB
+              # -XX:+UseG1GC      = 使用 G1 垃圾回收器
+              # -XX:+HeapDumpOnOutOfMemoryError = OOM 时导出堆转储文件
+          
+          # ---------- 资源限制 ----------
+          resources:
+            requests:           # 资源请求（调度器会根据这个分配节点）
+              memory: "1024Mi"  # 请求 1GB 内存
+              cpu: "500m"       # 请求 0.5 个 CPU 核心
+            limits:             # 资源限制（容器不能超过这个值）
+              memory: "2048Mi"  # 最多使用 2GB 内存
+              cpu: "1000m"      # 最多使用 1 个 CPU 核心
+          
+          # ---------- 健康检查（已禁用） ----------
+          # 注释说明：因为应用没有添加 spring-boot-starter-actuator 依赖
+          # 所以 /actuator/health 路径不存在，启用会导致 Pod 重启
+          # 
+          # livenessProbe:       # 存活探针（检查容器是否活着）
+          #   httpGet:           # HTTP GET 请求检查
+          #     path: /sandbox-agent-scope/actuator/health
+          #     port: 1013
+          #   initialDelaySeconds: 60  # 启动后 60 秒开始检查
+          #   periodSeconds: 10        # 每 10 秒检查一次
+          # readinessProbe:      # 就绪探针（检查容器是否准备好接收流量）
+          #   httpGet:
+          #     path: /sandbox-agent-scope/actuator/health
+          #     port: 1013
+          #   initialDelaySeconds: 30  # 启动后 30 秒开始检查
+          #   periodSeconds: 5         # 每 5 秒检查一次
+
+# ============================================================
+# 5. Service 配置（定义如何访问 Pod）
+# ============================================================
+---
+apiVersion: v1                # 使用的 K8s API 版本
+kind: Service                 # 资源类型：Service（服务发现和负载均衡）
+metadata:
+  name: sandbox-agent-service # Service 的名称
+  namespace: default          # 所属命名空间
+  labels:
+    app: sandbox-agent        # 标签
+
+spec:
+  type: NodePort              # Service 类型：
+    # ClusterIP = 集群内部访问（默认）
+    # NodePort  = 通过节点端口访问（外部可访问）
+    # LoadBalancer = 云负载均衡器
+  # ExternalName = 外部服务别名
+  
+  ports:
+    - port: 1013              # Service 监听的端口（集群内部）
+      targetPort: 1013        # 转发到 Pod 的端口（容器的 containerPort）
+      nodePort: 30113         # 节点端口（外部访问端口，范围 30000-32767）
+      protocol: TCP           # 协议类型
+      name: http              # 端口名称
+  
+  selector:                   # 选择器（Service 通过标签选择 Pod）
+    app: sandbox-agent        # 匹配 app=sandbox-agent 的 Pod

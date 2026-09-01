@@ -1,0 +1,124 @@
+# ============================================================
+# 第一步：创建 Secret
+# ============================================================
+kubectl apply -f secret.yaml
+
+# 验证 Secret 是否创建成功
+kubectl get secrets
+# 输出示例：
+# NAME                    TYPE     DATA   AGE
+# deepseek-credentials    Opaque   1      5s
+
+# ============================================================
+# 第二步：部署应用
+# ============================================================
+kubectl apply -f deployment.yaml
+
+# 输出示例：
+# deployment.apps/sandbox-agent created
+# service/sandbox-agent-service created
+
+# ============================================================
+# 第三步：查看部署状态
+# ============================================================
+
+# 查看 Deployment
+kubectl get deployments
+# 输出示例：
+# NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+# sandbox-agent   1/1     1            1           10s
+
+# 查看 Pod
+kubectl get pods
+# 输出示例：
+# NAME                             READY   STATUS    RESTARTS   AGE
+# sandbox-agent-5bf8d46695-xxxxx   1/1     Running   0          15s
+
+# 查看 Service
+kubectl get svc
+# 输出示例：
+# NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+# kubernetes              ClusterIP   10.96.0.1       <none>        443/TCP          23h
+# sandbox-agent-service   NodePort    10.110.89.205   <none>        1013:30113/TCP   20s
+
+# 查看 Endpoints（确认 Service 关联到 Pod）
+kubectl get endpoints
+# 输出示例：
+# NAME                    ENDPOINTS           AGE
+# sandbox-agent-service   10.1.0.20:1013      20s
+# 如果有 ENDPOINTS 显示 IP:端口，说明关联成功
+
+# ============================================================
+# 第四步：查看日志（确认应用启动成功）
+# ============================================================
+
+# 查看实时日志
+kubectl logs -f deployment/sandbox-agent
+
+# 看到类似输出说明启动成功：
+# 2026-09-01 09:26:14.226 INFO - [] - [main] c.s.agentscope.AgentScopeApplication : Started AgentScopeApplication in 2.5 seconds
+
+# ============================================================
+# 第五步：测试服务
+# ============================================================
+
+# 通过 NodePort 访问
+curl http://localhost:30113/sandbox-agent-scope/quick-start/build-by-builder
+
+# 或者浏览器访问：
+# http://localhost:30113/sandbox-agent-scope/quick-start/build-by-builder
+
+如果部署失败，排查步骤
+
+# 1. 查看 Pod 状态
+kubectl get pods
+
+# 2. 查看 Pod 详细信息（看 Events）
+kubectl describe pod <pod-name>
+
+# 3. 查看日志
+kubectl logs <pod-name>
+
+# 4. 如果 Pod 在 CrashLoopBackOff，查看之前的日志
+kubectl logs <pod-name> --previous
+
+# 5. 查看 Secret 是否存在
+kubectl get secret deepseek-credentials
+
+# 6. 查看 Service
+kubectl describe service sandbox-agent-service
+
+===============================================================================
+
+# 1. 先应用 Secret
+kubectl apply -f secret.yaml
+
+# 2. 再应用 Deployment 和 Service
+kubectl apply -f deployment.yaml
+
+# 3. 查看部署状态
+kubectl get pods
+kubectl get deployments
+kubectl get services
+
+# 查看 Pod 日志
+kubectl logs -f deployment/sandbox-agent
+
+# 查看 Pod 详情（如果有问题）
+kubectl describe pod -l app=sandbox-agent
+
+# 查看所有资源
+kubectl get all
+
+
+# 1. 删除
+kubectl delete deployment sandbox-agent
+
+# 2. 确认删除
+kubectl get pods
+
+# 3. 重新加载
+kubectl apply -f deployment.yaml
+
+# 4. 查看日志
+kubectl logs -f deployment/sandbox-agent

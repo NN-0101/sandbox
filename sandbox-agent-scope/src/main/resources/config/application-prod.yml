@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      # 指定当前生效的配置文件
+      on-profile: prod
+    #显式导入外部配置 Nacos
+    import:
+      - optional:nacos:${spring.application.name}-${spring.config.activate.on-profile}.${spring.cloud.nacos.config.file-extension}
+
+agentscope:
+  openai:
+    api-key: sk-cc3500c1b40b4e14b73d2d120d06881c
+    base-url: https://api.deepseek.com
+    model-name: deepseek-v4-flash
+    stream: true
